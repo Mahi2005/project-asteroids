@@ -7,7 +7,7 @@ int main(void) {
   while(!WindowShouldClose())
     {
       BeginDrawing();
-      ClearBackground(RED);
+      ClearBackground(RAYWHITE);
       DrawText("Hello, World!", 0, 0, 20, WHITE);
       EndDrawing();
     }

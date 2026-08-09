@@ -1,0 +1,29 @@
+# === Compilation Outputs ===
+# Executables (matching the TARGET name in your Makefile)
+main
+main.exe
+
+# Object files and libraries
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+
+# Debug symbols
+*.dSYM/
+
+
+# === Code-OSS / VS Code Settings ===
+# Ignore personal workspace states but KEEP project configuration
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+
+# === Operating System Junk ===
+.DS_Store
+Thumbs.db

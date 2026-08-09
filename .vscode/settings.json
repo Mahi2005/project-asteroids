@@ -1,0 +1,8 @@
+{
+    "code-runner.executorMap": {
+        "c": "make run",
+        "cpp": "make run"
+    },
+    "code-runner.clearPreviousOutput": true,
+    "code-runner.saveFileBeforeRun": true
+}
