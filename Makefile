@@ -1,6 +1,6 @@
 # Compiler settings
 CC = gcc
-CFLAGS = -Wall -Wextra -g
+CFLAGS = -Wall -Wextra -g -Iinclude
 
 # Target executable name
 TARGET = main
@@ -9,7 +9,7 @@ TARGET = main
 LIBS = -lm -l raylib
 
 # Source files
-SRCS = main.c asteroids.c bullets.c ship.c utils.c
+SRCS = src/main.c src/asteroids.c src/bullets.c src/ship.c src/utils.c
 
 # Build target
 all: $(TARGET)
