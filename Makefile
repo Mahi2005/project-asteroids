@@ -6,7 +6,7 @@ CFLAGS = -Wall -Wextra -g
 TARGET = main
 
 # Special libraries to link (e.g., -lm for math)
-LIBS = -l raylib
+LIBS = -lm -l raylib
 
 # Source files
 SRCS = main.c
