@@ -9,7 +9,7 @@ TARGET = main
 LIBS = -lm -l raylib
 
 # Source files
-SRCS = main.c
+SRCS = main.c asteroids.c bullets.c ship.c utils.c
 
 # Build target
 all: $(TARGET)
