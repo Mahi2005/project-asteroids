@@ -15,17 +15,17 @@ typedef struct {
   Vector2 acceleration;
   float max_speed;
   bool intact;
-} Ship;
+} Ship_T;
 
-void reposition_ship(Ship*, Vector2, float);
-Vector2 farthest_vertex_from_bottom(Ship *, int);
-Vector2 farthest_vertex_from_top(Ship *, int);
-Vector2 farthest_vertex_from_right(Ship *, int);
-Vector2 farthest_vertex_from_left(Ship *, int);
-int crossed_border_partial(Ship *, int, int);
-void init_ship(Ship *, int);
-void move_ship(Ship *);
-void ship_screen_wraparound(Ship *, Ship *, int, int);
-void destruct_ship(Ship *);
-void DrawDestroyedShip(Ship *ship);
+void reposition_ship(Ship_T*, Vector2, float);
+Vector2 farthest_vertex_from_bottom(Ship_T *, int);
+Vector2 farthest_vertex_from_top(Ship_T *, int);
+Vector2 farthest_vertex_from_right(Ship_T *, int);
+Vector2 farthest_vertex_from_left(Ship_T *, int);
+int crossed_border_partial(Ship_T *, int, int);
+void init_ship(Ship_T *, int);
+void move_ship(Ship_T *);
+void ship_screen_wraparound(Ship_T *, Ship_T *, int, int);
+void destruct_ship(Ship_T *);
+void DrawDestroyedShip(Ship_T *ship);
 #endif

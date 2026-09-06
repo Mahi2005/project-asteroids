@@ -4,7 +4,7 @@
 
 
 
-void reposition_ship(Ship *ship, Vector2 displacement, float angle) {
+void reposition_ship(Ship_T *ship, Vector2 displacement, float angle) {
   // orients the ship's top, left and right vertices after updating its centroid
   // i.e position by translation or rotation
   // direction of ship is determined by direction of its top vertex w.r.t its
@@ -20,7 +20,7 @@ void reposition_ship(Ship *ship, Vector2 displacement, float angle) {
       ship->centroid);
 }
 
-Vector2 farthest_vertex_from_bottom(Ship *ship, int screenheight) {
+Vector2 farthest_vertex_from_bottom(Ship_T *ship, int screenheight) {
   float a[3]; // order corresponds to top, right, left
   // each element is the perpendicular distance of the corresponding vertex from
   // the bottom screen border
@@ -46,7 +46,7 @@ Vector2 farthest_vertex_from_bottom(Ship *ship, int screenheight) {
   return Vector2Zero();
 }
 
-Vector2 farthest_vertex_from_top(Ship *ship, int screenheight) {
+Vector2 farthest_vertex_from_top(Ship_T *ship, int screenheight) {
   float a[3]; // order corresponds to top, right, left
   // each element is the perpendicular distance of the corresponding vertex from
   // the bottom screen border
@@ -72,7 +72,7 @@ Vector2 farthest_vertex_from_top(Ship *ship, int screenheight) {
   return Vector2Zero();
 }
 
-Vector2 farthest_vertex_from_right(Ship *ship, int screenwidth) {
+Vector2 farthest_vertex_from_right(Ship_T *ship, int screenwidth) {
   float a[3]; // order corresponds to top, right, left
   // each element is the perpendicular distance of the corresponding vertex from
   // the bottom screen border
@@ -98,7 +98,7 @@ Vector2 farthest_vertex_from_right(Ship *ship, int screenwidth) {
   return Vector2Zero();
 }
 
-Vector2 farthest_vertex_from_left(Ship *ship, int screenwidth) {
+Vector2 farthest_vertex_from_left(Ship_T *ship, int screenwidth) {
   float a[3]; // order corresponds to top, right, left
   // each element is the perpendicular distance of the corresponding vertex from
   // the bottom screen border
@@ -124,7 +124,7 @@ Vector2 farthest_vertex_from_left(Ship *ship, int screenwidth) {
   return Vector2Zero();
 }
 
-int crossed_border_partial(Ship *ship, int screenwidth, int screenheight) {
+int crossed_border_partial(Ship_T *ship, int screenwidth, int screenheight) {
   // function for determining if any vertex of the ship has crossed the screen
   // border
   if ((ship->top.x < 0) || (ship->top.x > screenwidth))
@@ -142,7 +142,7 @@ int crossed_border_partial(Ship *ship, int screenwidth, int screenheight) {
   return 0;
 }
 
-void init_ship(Ship *ship, int ship_length) {
+void init_ship(Ship_T *ship, int ship_length) {
   float init_speed = 10;
   ship->centroid =
       Vector2Create(GetScreenWidth() / 2.0, GetScreenHeight() / 2.0);
@@ -155,7 +155,7 @@ void init_ship(Ship *ship, int ship_length) {
   ship->max_speed = 800.0;
 }
 
-void move_ship(Ship *ship) {
+void move_ship(Ship_T *ship) {
     float dt = GetFrameTime();
     if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A)) {
       // ship.rotation -= ship.rotation_speed * dt;
@@ -190,7 +190,7 @@ void move_ship(Ship *ship) {
     }
 }
 
-void ship_screen_wraparound(Ship* ship, Ship* ship_cpy, int screenwidth, int screenheight) {      
+void ship_screen_wraparound(Ship_T* ship, Ship_T* ship_cpy, int screenwidth, int screenheight) {      
     if (((ship->top.y < 0) || (ship->left.y < 0)) || (ship->right.y < 0)) {
         ship_cpy->centroid =
             Vector2Add(ship->centroid, Vector2Create(0, screenheight));
@@ -240,14 +240,14 @@ void ship_screen_wraparound(Ship* ship, Ship* ship_cpy, int screenwidth, int scr
     }
 }
 
-void destruct_ship(Ship *ship) {
+void destruct_ship(Ship_T *ship) {
   // TODO: Implement ship destruction effects here
   // Main idea is to detach the lines of the ship and show them being rotated or
   // displaced in random directions.
   ship->intact = false;
 }
 
-void DrawDestroyedShip(Ship *ship) {
+void DrawDestroyedShip(Ship_T *ship) {
   DrawText("SHIP DESTROYED. GAME OVER!\nPress R to play again",
            ship->centroid.x, ship->centroid.y, 20, RED);
 }

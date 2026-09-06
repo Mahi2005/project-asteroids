@@ -5,6 +5,7 @@
 #include "raymath.h"
 #include "utils.h"
 #include "ship.h"
+#include "asteroids.h"
 
 #define MAX_BULLETS 20
 #define BULLET_SPEED 400
@@ -15,11 +16,11 @@ typedef struct {
   float radius;
   int active;
   float lifetime;
-} Bullets;
+} Bullet_T;
 
-void shoot_bullets(Bullets *bullet, Ship *ship);
-void bullets_screen_wraparound(Bullets *bullet, int screenwidth, int screenheight);
-void bullet_destroy_ship(Bullets *bullet, Ship *ship);
-
+void Bullet_shoot(Bullet_T *bullet, Ship_T *ship);
+void Bullet_screen_wraparound(Bullet_T *bullet, int screenwidth, int screenheight);
+void Bullet_strike_ship(Bullet_T *bullet, Ship_T *ship);
+void Bullet_strike_asteroids(Bullet_T bullets[], Asteroid_T asteroids[]);
 
 #endif

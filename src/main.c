@@ -11,13 +11,16 @@
 #include <time.h>
 
 
+static int lives = 3;
 
 int main(void) {
-  Ship ship;
-  Ship ship_cpy;
-  Bullets bullet[MAX_BULLETS] = {0};
+  Ship_T ship;
+  Ship_T ship_cpy;
+  Bullet_T bullets[MAX_BULLETS] = {0};
   Asteroid_T asteroids[MAX_ASTEROIDS] = {0};
   Asteroid_T asteroids_2[MAX_ASTEROIDS] = {0};
+  Asteroid_T asteroids_3[MAX_ASTEROIDS] = {0};
+  Asteroid_T asteroids_4[MAX_ASTEROIDS] = {0};
   const int screenwidth = 800.0;
   const int screenheight = 600.0;
   InitWindow(screenwidth, screenheight, "Game");
@@ -29,6 +32,7 @@ int main(void) {
   init_ship(&ship, ship_length);
   // Asteroids initialization
   SetRandomSeed(time(0));
+  
   int rand_seeds[MAX_ASTEROIDS];
   for (int i = 0; i < MAX_ASTEROIDS; i++) {
       rand_seeds[i] = GetRandomValue(0, INT_MAX);
@@ -44,8 +48,8 @@ int main(void) {
       ship_screen_wraparound(&ship, &ship_cpy, screenwidth, screenheight);
       
       // Bullets
-      shoot_bullets(bullet, &ship);
-      bullets_screen_wraparound(bullet, screenwidth, screenheight);
+      Bullet_shoot(bullets, &ship);
+      Bullet_screen_wraparound(bullets, screenwidth, screenheight);
       
       // Collision detection & effects
       // bullet_destroy_ship(bullet, &ship);
@@ -55,9 +59,16 @@ int main(void) {
       for(int i = 0; i < MAX_ASTEROIDS; i++) {
           Asteroid_move(&asteroids[i]);
           Asteroid_init_vertex_codes(&asteroids[i], screenwidth, screenheight);
-          Asteroid_screen_wraparound(&asteroids[i], &asteroids_2[i], screenwidth, screenheight);
+          Asteroid_screen_wraparound(&asteroids[i], &asteroids_2[i], &asteroids_3[i], &asteroids_4[i], screenwidth, screenheight);
           Asteroid_move(&asteroids_2[i]);
+          Asteroid_move(&asteroids_3[i]);
+          Asteroid_move(&asteroids_4[i]);
       }
+      
+      // Collision detection, and corresponding fragment or destruct effects
+      Bullet_strike_asteroids(bullets, asteroids);
+      Asteroid_strike_ship(asteroids, &ship);
+      
       Vector2 far_vertex_bot = farthest_vertex_from_bottom(&ship, screenheight);
       Vector2 far_vertex_top = farthest_vertex_from_top(&ship, screenheight);
       Vector2 far_vertex_right = farthest_vertex_from_right(&ship, screenwidth);
@@ -95,17 +106,28 @@ int main(void) {
               MAX_ASTEROIDS,
               Asteroid_is_partially_crossed(&asteroids[0]) ? "yes" : "no");
       DrawText(debug_info, 410, 55, 12, RED);
+      char score[10];
+      sprintf(score, "%d\n", total_score);
+      DrawText(score, 10, 10, 30, BLUE);
       for (int i = 0; i < MAX_ASTEROIDS; i++) {
-          Asteroid_draw(&asteroids[i], WHITE);
-          if (Asteroid_is_partially_crossed(&asteroids[i])) {
-              Asteroid_draw(&asteroids_2[i], WHITE);
-          }
-           if (Asteroid_is_fully_crossed(&asteroids[i])) {
-              asteroids[i] = asteroids_2[i];
+          if (asteroids[i].state) {
+              Asteroid_draw(&asteroids[i], WHITE);
+              if (Asteroid_is_partially_crossed(&asteroids[i])) {
+                  Asteroid_draw(&asteroids_2[i], WHITE);
+                  Asteroid_draw(&asteroids_3[i], WHITE);
+                  Asteroid_draw(&asteroids_4[i], WHITE);
+              }
+              if (Asteroid_is_fully_crossed(&asteroids[i])) {
+                  asteroids[i] = asteroids_2[i];
+              }
+          } else {
+              DrawLineStrip(asteroids[i].vertices, asteroids[i].n_vertices, RED);
+              DrawText("DESTROYED", asteroids[i].position.x, asteroids[i].position.y, 10, YELLOW);
           }
       }
       if (ship.intact) {
           DrawTriangleLines(ship.top, ship.left, ship.right, WHITE);
+          DrawCircleLinesV(ship.centroid, Vector2Distance(ship.top, ship.centroid) * (1 - 0.2), YELLOW);
           // if (is_fully_crossed_vert || is_fully_crossed_hor) {
           //    ship = ship_cpy;
           //    DrawTriangleLines(ship.top, ship.left, ship.right, WHITE);
@@ -116,21 +138,23 @@ int main(void) {
           if ((is_fully_crossed_left || is_fully_crossed_right) ||
               (is_fully_crossed_bot || is_fully_crossed_top)) {
               ship = ship_cpy;
-      }
+          }
           for (int i = 0; i < MAX_BULLETS; i++) {
-              if (bullet[i].active) {
-                  DrawCircleV(bullet[i].position, 5.0f, RED);
+              if (bullets[i].active) {
+                  DrawCircleV(bullets[i].position, 5.0f, RED);
               }
           }
-      } else {
+      } else if (lives > 0) {
           for (int i = 0; i < MAX_BULLETS; i++) {
-              bullet[i].active = 0;
+              bullets[i].active = 0;
           }
           DrawDestroyedShip(&ship);
           bool R_pressed = IsKeyPressed(KEY_R);
           if (R_pressed) {
               init_ship(&ship, ship_length);
           };
+      } else {
+          DrawText("GAME OVER!", screenwidth - 50, screenheight + 20, 20, RED);
       }
       // DrawCircle(ship.centroid.x, ship.centroid.y, 5, RED);
       EndDrawing();

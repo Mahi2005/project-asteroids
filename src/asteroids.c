@@ -1,6 +1,7 @@
 #include "raylib.h"
 #include "raymath.h"
 #include "asteroids.h"
+#include "bullets.h"
 #include "utils.h"
 #include <stdlib.h>
 #include <time.h>
@@ -9,8 +10,8 @@
 
 #define DEBUG 0
 
-extern int ASTEROIDS_COUNT = MAX_ASTEROIDS; 
-
+int asteroids_count = MAX_ASTEROIDS; 
+int total_score = 0;
 
 Asteroid_T* Asteroid_new() {
     return malloc(sizeof(Asteroid_T));
@@ -34,12 +35,17 @@ void Asteroid_copy(Asteroid_T* a1, Asteroid_T* a2) {
         a1->bitcodes[i] = a2->bitcodes[i];
     }
     a1->velocity = a2->velocity;
+    a1->state = a2->state;
 }
 
 
 void Asteroid_rand_init(Asteroid_T* a) {
-    
-    a->position = Vector2Create(GetRandomValue(0, GetScreenWidth()), GetRandomValue(0, GetScreenHeight()));
+    Vector2 init_positions[2];
+    int sc_w = GetScreenWidth();
+    int sc_h = GetScreenHeight();
+    init_positions[0] = Vector2Create(GetRandomValue(0, sc_w / 2 - 150), GetRandomValue(0, sc_h / 2 - 150));
+    init_positions[1] = Vector2Create(GetRandomValue(sc_w / 2 + 150, sc_w), GetRandomValue(sc_h / 2 + 150, sc_h));
+    a->position = init_positions[GetRandomValue(0, 1)];                                 
     a->radius = GetRandomValue(500, 1000) / 10.0;
     a->n_vertices = 12;
     a->vertices = malloc(sizeof(Vector2) * a->n_vertices);
@@ -72,6 +78,7 @@ void Asteroid_rand_init(Asteroid_T* a) {
     float rotation = GetRandomValue(0, (2*PI)*100) / 100.0;
     // float rotation = 0;
     a->velocity = Vector2Rotate(Vector2Scale(Vector2Create(0, -1), speed), rotation);
+    a->state = 3;
 }
 
 void Asteroid_reposition(Asteroid_T* a, Vector2 displacement) {
@@ -79,6 +86,13 @@ void Asteroid_reposition(Asteroid_T* a, Vector2 displacement) {
     for (int i = 0; i < a->n_vertices; i++) {
         a->vertices[i] = Vector2Add(a->vertices[i], displacement);
     }
+}
+
+void Asteroid_rescale(Asteroid_T* a, float scale) {
+    for (int i = 0; i < a->n_vertices; i++) {
+        a->vertices[i] = Vector2ScaleRelative(a->vertices[i], scale, a->position);
+    }
+    a->radius *= scale;
 }
 
 
@@ -105,7 +119,7 @@ void Asteroid_draw(Asteroid_T* a, Color color) {
     }
     DrawLineV(a->vertices[pos_y_n_max], a->vertices[a->n_vertices - 1], color);
     DrawLineV(a->vertices[a->n_vertices - 2], a->vertices[a->n_vertices - 1], color);
-    // DrawCircleLinesV(a->position, a->radius, YELLOW);
+    DrawCircleLinesV(a->position, a->radius, YELLOW);
     if (DEBUG) {
         for (int i = 0; i < a->n_vertices; i++) {
             // sprintf(debug, "(%f, %f)", a->vertices[i].x, a->vertices[i].y);
@@ -142,25 +156,63 @@ int Asteroid_is_fully_crossed(Asteroid_T* a) {
 }
 
 
-void Asteroid_screen_wraparound(Asteroid_T a[], Asteroid_T a_cpy[], int screen_w, int screen_h) {
-    for (int i = 0; i < MAX_ASTEROIDS; i++) {
-        Asteroid_copy(a_cpy, a);
-        switch (Asteroid_is_partially_crossed(a)) {
-        case 8: // partially crosses left boundary
-            Asteroid_reposition(a_cpy, Vector2Create(screen_w, 0));
-            break;
-        case 4: // partially crosses right boundary
-            Asteroid_reposition(a_cpy, Vector2Create(-screen_w, 0));
-            break;
-        case 2:
-            Asteroid_reposition(a_cpy, Vector2Create(0, screen_h));
-            break;
-        case 1:
-            Asteroid_reposition(a_cpy, Vector2Create(0, -screen_h));
-            break;
-        }
+void Asteroid_screen_wraparound(Asteroid_T *a, Asteroid_T *a2, Asteroid_T *a3, Asteroid_T *a4, int screen_w, int screen_h) {
+    Asteroid_copy(a2, a);
+    Asteroid_copy(a3, a);
+    Asteroid_copy(a4, a);
+    switch (Asteroid_is_partially_crossed(a)) {
+    case 8: // partially crosses left boundary
+        Asteroid_reposition(a2, Vector2Create(screen_w, 0));
+        break;
+    case 10: // partially crosses top-left corner
+        Asteroid_reposition(a2, Vector2Create(screen_w, 0));
+        Asteroid_reposition(a3, Vector2Create(0, screen_h));
+        Asteroid_reposition(a4, Vector2Create(screen_w, screen_h));
+        break;
+    case 2: // partially crosses top boundary
+        Asteroid_reposition(a2, Vector2Create(0, screen_h));
+        break;
+    case 6: // partially crossed top-right corner
+        Asteroid_reposition(a2, Vector2Create(-screen_w, 0));
+        Asteroid_reposition(a3, Vector2Create(0, screen_h));
+        Asteroid_reposition(a4, Vector2Create(-screen_w, screen_h));
+        break;
+    case 4: // partially crosses right boundary
+        Asteroid_reposition(a2, Vector2Create(-screen_w, 0));
+        break;
+    case 5: // partially crosses bottom-right corner
+        Asteroid_reposition(a2, Vector2Create(-screen_w, 0));
+        Asteroid_reposition(a3, Vector2Create(0, -screen_h));
+        Asteroid_reposition(a4, Vector2Create(-screen_w, -screen_h));
+        break;
+    case 1: // partially crosses bottom boundary
+        Asteroid_reposition(a2, Vector2Create(0, -screen_h));
+        break;
+    case 11: // partially crosses bottom_left corner
+        Asteroid_reposition(a2, Vector2Create(screen_w, 0));
+        Asteroid_reposition(a3, Vector2Create(0, -screen_h));
+        Asteroid_reposition(a4, Vector2Create(screen_w, -screen_h));
+        break;
+    }
+}
+
+void Asteroid_fragment_or_destruct(Asteroid_T *a) {
+    if (a->state > 0) {
+        a->state--;
+        total_score += 200;
+        Asteroid_rescale(a, 0.5);
+    } else {
+        asteroids_count--;
+        total_score += 500;
     }
 }
 
 
+void Asteroid_strike_ship(Asteroid_T asteroids[], Ship_T *ship) {
+    for (int i = 0; i < MAX_ASTEROIDS; i++) {
+        float ship_radius = Vector2Distance(ship->top, ship->centroid) * 0.9;
+        bool collision = CheckCollisionCircles(asteroids[i].position, asteroids[i].radius, ship->centroid, ship_radius);
+        if (asteroids[i].state && collision) ship->intact = 0;
+    }
+}
 
