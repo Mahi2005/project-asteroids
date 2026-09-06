@@ -1,14 +1,14 @@
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <limits.h>
 #include "raylib.h"
 #include "raymath.h"
 #include "ship.h"
 #include "bullets.h"
 #include "utils.h"
 #include "asteroids.h"
-
-
+#include <time.h>
 
 
 
@@ -16,6 +16,7 @@ int main(void) {
   Ship ship;
   Ship ship_cpy;
   Bullets bullet[MAX_BULLETS] = {0};
+  Asteroid_T asteroids[MAX_ASTEROIDS] = {0};
   const int screenwidth = 800.0;
   const int screenheight = 600.0;
   InitWindow(screenwidth, screenheight, "Game");
@@ -25,19 +26,34 @@ int main(void) {
   // Ship initialization
   float ship_length = 50;
   init_ship(&ship, ship_length);
-
+  // Asteroids initialization
+  SetRandomSeed(time(0));
+  int rand_seeds[MAX_ASTEROIDS];
+  for (int i = 0; i < MAX_ASTEROIDS; i++) {
+      rand_seeds[i] = GetRandomValue(0, INT_MAX);
+  }
+  for (int i = 0; i < MAX_ASTEROIDS; i++) {
+      SetRandomSeed(rand_seeds[i]);
+      Asteroid_rand_init(&asteroids[i]);
+  }
   SetTargetFPS(60);
   while (!WindowShouldClose() || IsKeyPressed(KEY_R)) {
+      // Ship
       move_ship(&ship);
       ship_screen_wraparound(&ship, &ship_cpy, screenwidth, screenheight);
       
       // Bullets
       shoot_bullets(bullet, &ship);
       bullets_screen_wraparound(bullet, screenwidth, screenheight);
-
+      
       // Collision detection & effects
       // bullet_destroy_ship(bullet, &ship);
-      
+      // Asteroids
+
+      for(int i = 0; i < MAX_ASTEROIDS; i++) {
+          Asteroid_move(&asteroids[i]);
+      }
+      Asteroid_screen_wraparound(asteroids);
       Vector2 far_vertex_bot = farthest_vertex_from_bottom(&ship, screenheight);
       Vector2 far_vertex_top = farthest_vertex_from_top(&ship, screenheight);
       Vector2 far_vertex_right = farthest_vertex_from_right(&ship, screenwidth);
@@ -61,14 +77,21 @@ int main(void) {
               "Crossed vert. border fully? %s\n"
               "Crossed hor. border fully? %s\n"
               "Speed: %f\n"
-              "Is ship intact: %s\n",
+              "Is ship intact: %s\n"
+              "Asteroid position: %f, %f\n"
+              "Total number of asteroids: %d\n",
               screenheight - far_vertex_bot.y, far_vertex_top.y,
               screenwidth - far_vertex_right.x, far_vertex_left.x,
               is_partially_crossed ? "yes" : "no",
               (is_fully_crossed_top || is_fully_crossed_bot) ? "yes" : "no",
               (is_fully_crossed_left || is_fully_crossed_right) ? "yes" : "no",
-              Vector2Length(ship.velocity), ship.intact ? "yes" : "no");
+              Vector2Length(ship.velocity), ship.intact ? "yes" : "no",
+              asteroids[0].position.x, asteroids[0].position.y,
+              MAX_ASTEROIDS);
       DrawText(debug_info, 410, 55, 12, RED);
+      for (int i = 0; i < MAX_ASTEROIDS; i++) {
+          Asteroid_draw(&asteroids[i]);
+      }
       if (ship.intact) {
           DrawTriangleLines(ship.top, ship.left, ship.right, WHITE);
           // if (is_fully_crossed_vert || is_fully_crossed_hor) {

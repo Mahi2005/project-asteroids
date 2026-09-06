@@ -15,3 +15,7 @@ Vector2 Vector2ScaleRelative(Vector2 point, float scale, Vector2 center) {
   relative = Vector2Scale(relative, scale);
   return Vector2Add(relative, center);
 }
+
+float get_random_float(float min, float max) {
+    return GetRandomValue(min * 100, max * 100) / 100.0;
+}
