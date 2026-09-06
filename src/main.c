@@ -17,6 +17,7 @@ int main(void) {
   Ship ship_cpy;
   Bullets bullet[MAX_BULLETS] = {0};
   Asteroid_T asteroids[MAX_ASTEROIDS] = {0};
+  Asteroid_T asteroids_2[MAX_ASTEROIDS] = {0};
   const int screenwidth = 800.0;
   const int screenheight = 600.0;
   InitWindow(screenwidth, screenheight, "Game");
@@ -48,12 +49,15 @@ int main(void) {
       
       // Collision detection & effects
       // bullet_destroy_ship(bullet, &ship);
+      
       // Asteroids
 
       for(int i = 0; i < MAX_ASTEROIDS; i++) {
           Asteroid_move(&asteroids[i]);
+          Asteroid_init_vertex_codes(&asteroids[i], screenwidth, screenheight);
+          Asteroid_screen_wraparound(&asteroids[i], &asteroids_2[i], screenwidth, screenheight);
+          Asteroid_move(&asteroids_2[i]);
       }
-      Asteroid_screen_wraparound(asteroids);
       Vector2 far_vertex_bot = farthest_vertex_from_bottom(&ship, screenheight);
       Vector2 far_vertex_top = farthest_vertex_from_top(&ship, screenheight);
       Vector2 far_vertex_right = farthest_vertex_from_right(&ship, screenwidth);
@@ -79,7 +83,8 @@ int main(void) {
               "Speed: %f\n"
               "Is ship intact: %s\n"
               "Asteroid position: %f, %f\n"
-              "Total number of asteroids: %d\n",
+              "Total number of asteroids: %d\n"
+              "Asteroid 0 partially crossed?: %s\n",
               screenheight - far_vertex_bot.y, far_vertex_top.y,
               screenwidth - far_vertex_right.x, far_vertex_left.x,
               is_partially_crossed ? "yes" : "no",
@@ -87,10 +92,17 @@ int main(void) {
               (is_fully_crossed_left || is_fully_crossed_right) ? "yes" : "no",
               Vector2Length(ship.velocity), ship.intact ? "yes" : "no",
               asteroids[0].position.x, asteroids[0].position.y,
-              MAX_ASTEROIDS);
+              MAX_ASTEROIDS,
+              Asteroid_is_partially_crossed(&asteroids[0]) ? "yes" : "no");
       DrawText(debug_info, 410, 55, 12, RED);
       for (int i = 0; i < MAX_ASTEROIDS; i++) {
-          Asteroid_draw(&asteroids[i]);
+          Asteroid_draw(&asteroids[i], WHITE);
+          if (Asteroid_is_partially_crossed(&asteroids[i])) {
+              Asteroid_draw(&asteroids_2[i], WHITE);
+          }
+           if (Asteroid_is_fully_crossed(&asteroids[i])) {
+              asteroids[i] = asteroids_2[i];
+          }
       }
       if (ship.intact) {
           DrawTriangleLines(ship.top, ship.left, ship.right, WHITE);

@@ -19,3 +19,12 @@ Vector2 Vector2ScaleRelative(Vector2 point, float scale, Vector2 center) {
 float get_random_float(float min, float max) {
     return GetRandomValue(min * 100, max * 100) / 100.0;
 }
+
+int vertex_code(Vector2 v, int screen_w, int screen_h) {
+    int b3, b2, b1, b0;
+    b3 = (v.x < 0) << 3; // whether crosses left boundary
+    b2 = (v.x > screen_w) << 2; // whether crosses right boundary
+    b1 = (v.y < 0) << 1; // whether crosses top boundary
+    b0 = (v.y > screen_h); // whether crosses bottom boundary
+    return b3 | b2 | b1 | b0;
+}
