@@ -14,10 +14,10 @@
 
 
 
-#define DEBUG 0
+#define DEBUG 1
 
 int lives = 3;
-int asteroids_count = MAX_ASTEROIDS;
+int asteroids_count = INIT_ASTEROIDS;
 int total_score = 0;
 int level = 1;
 
@@ -46,7 +46,7 @@ int main(void) {
   for (int i = 0; i < MAX_ASTEROIDS; i++) {
       rand_seeds[i] = GetRandomValue(0, INT_MAX);
   }
-  for (int i = 0; i < MAX_ASTEROIDS; i++) {
+  for (int i = 0; i < INIT_ASTEROIDS; i++) {
       SetRandomSeed(rand_seeds[i]);
       Asteroid_rand_init(&asteroids[i]);
   }
@@ -57,7 +57,7 @@ int main(void) {
 
   while (!WindowShouldClose() || IsKeyPressed(KEY_R)) {
 
-      for(int i = 0; i < MAX_ASTEROIDS; i++) {
+      for(int i = 0; i < asteroids_count; i++) {
           if (asteroids[i].state) {
               Asteroid_move(&asteroids[i]);
               Asteroid_init_vertex_codes(&asteroids[i], screenwidth, screenheight);
@@ -72,8 +72,6 @@ int main(void) {
               //};
               // Asteroid_screen_wraparound(&asteroids[i], &asteroids_2[i], &asteroids_3[i], &asteroids_4[i], screenwidth, screenheight);
               Asteroid_move(&asteroids_2[i]);
-          } else {
-              Asteroid_init_to_zero(&asteroids[i]);
           }
       }
       // Ship
@@ -126,7 +124,7 @@ int main(void) {
       strcpy(str_lives, (lives == 3) ? "AAA" : ((lives == 2) ? "AA" : ((lives == 1) ? "A" : "")));
       DrawText(str_lives, 100, 10, 30, RED);
       
-      for (int i = 0; i < MAX_ASTEROIDS; i++) {
+      for (int i = 0; i < asteroids_count; i++) {
           if (asteroids[i].state) {
               Asteroid_draw(&asteroids[i], WHITE);
               if (Asteroid_is_partially_crossed(&asteroids[i])) {
@@ -161,7 +159,7 @@ int main(void) {
           }
           
           if (asteroids_count == 0) {
-              DrawText("LEVEL CLEARED!", screenwidth / 2 - MeasureText("LEVEL CLEARED", 20), screenheight / 2 - 20, 20, GREEN);
+              DrawText("LEVEL CLEARED!", screenwidth / 2 - MeasureText("LEVEL CLEARED", 20) / 2, screenheight / 2 - 20, 20, GREEN);
           }
       } else if (lives > 0) {
           for (int i = 0; i < MAX_BULLETS; i++) {
@@ -179,7 +177,7 @@ int main(void) {
           // for (int i = 0; i < MAX_ASTEROIDS; i++) {
           //    asteroids[i].state = 0;
           //}
-          DrawText("GAME OVER!", screenwidth / 2 - MeasureText("LEVEL CLEARED", 20), screenheight / 2 - 20, 20, RED);
+          DrawText("GAME OVER!", screenwidth / 2 - MeasureText("LEVEL CLEARED", 20) / 2, screenheight / 2 - 20, 20, RED);
       }
       
       // DrawCircle(ship.centroid.x, ship.centroid.y, 5, RED);
