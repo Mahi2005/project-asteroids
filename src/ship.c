@@ -157,36 +157,38 @@ void init_ship(Ship_T *ship, int ship_length) {
 
 void move_ship(Ship_T *ship) {
     float dt = GetFrameTime();
-    if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A)) {
-      // ship.rotation -= ship.rotation_speed * dt;
-      ship->acceleration = Vector2Rotate(ship->acceleration, -ship->rotation);
-      // ship.velocity = Vector2Rotate(ship.velocity, -ship.rotation);
-      reposition_ship(ship, Vector2Zero(), -ship->rotation);
-    }
-    if (IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) {
-      // ship->rotation += ship->rotation_speed*dt;
-      ship->acceleration = Vector2Rotate(ship->acceleration, ship->rotation);
-      // ship->velocity = Vector2Rotate(ship->velocity, ship->rotation);
-      reposition_ship(ship, Vector2Zero(), ship->rotation);
-    }
-
-    // float anglerad=(ship->rotation-90.0f)*DEG2RAD;
-
-    if (IsKeyDown(KEY_UP) || IsKeyDown(KEY_W)) {
-      // ship->velocity = Vector2Add(ship->velocity, Vector2Scale(ship->top, dt *
-      // ship->acceleration));
-      Vector2 displacement;
-      if (Vector2Length(ship->velocity) < ship->max_speed) {
-        Vector2 delta_v = Vector2Scale(ship->acceleration, dt);
-        ship->velocity = Vector2Add(ship->velocity, delta_v);
-      }
-      displacement = Vector2Scale(ship->velocity, dt);
-      reposition_ship(ship, displacement, 0);
-    } else {
-      float damping = expf(-1.2 * dt);
-      ship->velocity = Vector2Scale(ship->velocity, damping);
-      Vector2 displacement = Vector2Scale(ship->velocity, dt);
-      reposition_ship(ship, displacement, 0);
+    if (ship->intact) {
+        if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A)) {
+            // ship.rotation -= ship.rotation_speed * dt;
+            ship->acceleration = Vector2Rotate(ship->acceleration, -ship->rotation);
+            // ship.velocity = Vector2Rotate(ship.velocity, -ship.rotation);
+            reposition_ship(ship, Vector2Zero(), -ship->rotation);
+        }
+        if (IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) {
+            // ship->rotation += ship->rotation_speed*dt;
+            ship->acceleration = Vector2Rotate(ship->acceleration, ship->rotation);
+            // ship->velocity = Vector2Rotate(ship->velocity, ship->rotation);
+            reposition_ship(ship, Vector2Zero(), ship->rotation);
+        }
+        
+        // float anglerad=(ship->rotation-90.0f)*DEG2RAD;
+        
+        if (IsKeyDown(KEY_UP) || IsKeyDown(KEY_W)) {
+            // ship->velocity = Vector2Add(ship->velocity, Vector2Scale(ship->top, dt *
+            // ship->acceleration));
+            Vector2 displacement;
+            if (Vector2Length(ship->velocity) < ship->max_speed) {
+                Vector2 delta_v = Vector2Scale(ship->acceleration, dt);
+                ship->velocity = Vector2Add(ship->velocity, delta_v);
+            }
+            displacement = Vector2Scale(ship->velocity, dt);
+            reposition_ship(ship, displacement, 0);
+        } else {
+            float damping = expf(-1.2 * dt);
+            ship->velocity = Vector2Scale(ship->velocity, damping);
+            Vector2 displacement = Vector2Scale(ship->velocity, dt);
+            reposition_ship(ship, displacement, 0);
+        }
     }
 }
 
@@ -248,6 +250,5 @@ void destruct_ship(Ship_T *ship) {
 }
 
 void DrawDestroyedShip(Ship_T *ship) {
-  DrawText("SHIP DESTROYED. GAME OVER!\nPress R to play again",
-           ship->centroid.x, ship->centroid.y, 20, RED);
+
 }

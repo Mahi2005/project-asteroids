@@ -10,13 +10,19 @@
 
 #define DEBUG 0
 
+extern int lives;
 
 Asteroid_T* Asteroid_new() {
     return malloc(sizeof(Asteroid_T));
 }
 
-void Asteroid_init(Vector2 pos, float radius, Vector2 *vertices, int n, Vector2 velocity) {
-    
+void Asteroid_init_to_zero(Asteroid_T* a){
+    a->position = Vector2Zero();
+    a->radius = 0;
+    a->n_vertices = 0;
+    a->vertices = NULL;
+    a->velocity = Vector2Zero();
+    a->state = 0;
 }
 
 void Asteroid_copy(Asteroid_T* a1, Asteroid_T* a2) {
@@ -116,7 +122,7 @@ void Asteroid_draw(Asteroid_T* a, Color color) {
     }
     DrawLineV(a->vertices[pos_y_n_max], a->vertices[a->n_vertices - 1], color);
     DrawLineV(a->vertices[a->n_vertices - 2], a->vertices[a->n_vertices - 1], color);
-    DrawCircleLinesV(a->position, a->radius, YELLOW);
+    // DrawCircleLinesV(a->position, a->radius, YELLOW);
     if (DEBUG) {
         for (int i = 0; i < a->n_vertices; i++) {
             // sprintf(debug, "(%f, %f)", a->vertices[i].x, a->vertices[i].y);
@@ -190,9 +196,14 @@ void Asteroid_strike_ship(Asteroid_T asteroids[], Ship_T *ship) {
         bool collision = CheckCollisionCircles(asteroids[i].position, asteroids[i].radius, ship->centroid, ship_radius);
         if (asteroids[i].state && collision) {
             ship->intact = 0;
-            asteroids[i].state = 0;
+            // asteroids[i].state = 0;
+            lives--;
+            Asteroid_init_to_zero(&asteroids[i]);
+            break;
         }
     }
 }
+
+
 
 

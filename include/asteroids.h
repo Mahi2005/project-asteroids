@@ -22,6 +22,7 @@ typedef struct {
 } Asteroid_T;
 
 Asteroid_T* Asteroid_new();
+void Asteroid_init_to_zero(Asteroid_T* a);
 void Asteroid_copy(Asteroid_T* a1, Asteroid_T* a2);
 void Asteroid_rand_init(Asteroid_T* a);
 void Asteroid_move(Asteroid_T* a);

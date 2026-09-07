@@ -11,8 +11,10 @@
 #include <time.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
 
-#define DEBUG 1
+
+#define DEBUG 0
 
 int lives = 3;
 int asteroids_count = MAX_ASTEROIDS;
@@ -53,19 +55,23 @@ int main(void) {
   while (!WindowShouldClose() || IsKeyPressed(KEY_R)) {
 
       for(int i = 0; i < MAX_ASTEROIDS; i++) {
-          Asteroid_move(&asteroids[i]);
-          Asteroid_init_vertex_codes(&asteroids[i], screenwidth, screenheight);
-          // Asteroid_init_vertex_codes(&asteroids_new_level[i], screenwidth, screenheight);
-          Asteroid_screen_wraparound(&asteroids[i], &asteroids_2[i], screenwidth, screenheight);
-          // Asteroid_screen_wraparound(&asteroids_new_level[i], &asteroids_new_level_2[i], &asteroids_new_level_3[i], &asteroids_new_level_4[i], screenwidth, screenheight);          
-          // if (level > 1) {
-          //    asteroids[i] = asteroids_new_level[i];
-          //    asteroids_2[i] = asteroids_new_level_2[i];
-          //    asteroids_3[i] = asteroids_new_level_3[i];
-          //    asteroids_4[i] = asteroids_new_level_4[i];
-          //};
-          // Asteroid_screen_wraparound(&asteroids[i], &asteroids_2[i], &asteroids_3[i], &asteroids_4[i], screenwidth, screenheight);
-          Asteroid_move(&asteroids_2[i]);
+          if (asteroids[i].state) {
+              Asteroid_move(&asteroids[i]);
+              Asteroid_init_vertex_codes(&asteroids[i], screenwidth, screenheight);
+              // Asteroid_init_vertex_codes(&asteroids_new_level[i], screenwidth, screenheight);
+              Asteroid_screen_wraparound(&asteroids[i], &asteroids_2[i], screenwidth, screenheight);
+              // Asteroid_screen_wraparound(&asteroids_new_level[i], &asteroids_new_level_2[i], &asteroids_new_level_3[i], &asteroids_new_level_4[i], screenwidth, screenheight);          
+              // if (level > 1) {
+              //    asteroids[i] = asteroids_new_level[i];
+              //    asteroids_2[i] = asteroids_new_level_2[i];
+              //    asteroids_3[i] = asteroids_new_level_3[i];
+              //    asteroids_4[i] = asteroids_new_level_4[i];
+              //};
+              // Asteroid_screen_wraparound(&asteroids[i], &asteroids_2[i], &asteroids_3[i], &asteroids_4[i], screenwidth, screenheight);
+              Asteroid_move(&asteroids_2[i]);
+          } else {
+              Asteroid_init_to_zero(&asteroids[i]);
+          }
       }
       // Ship
       move_ship(&ship);
@@ -87,7 +93,7 @@ int main(void) {
       Asteroid_strike_ship(asteroids, &ship);
       if (asteroids_count == 0) {
           // level++;
-          asteroids_count = MAX_ASTEROIDS;
+          // asteroids_count = MAX_ASTEROIDS;
       }
       Vector2 far_vertex_bot = farthest_vertex_from_bottom(&ship, screenheight);
       Vector2 far_vertex_top = farthest_vertex_from_top(&ship, screenheight);
@@ -133,6 +139,11 @@ int main(void) {
       char score[10];
       sprintf(score, "%d\n", total_score);
       DrawText(score, 10, 10, 30, BLUE);
+
+      char str_lives[3];
+      strcpy(str_lives, (lives == 3) ? "AAA" : ((lives == 2) ? "AA" : ((lives == 1) ? "A" : "")));
+      DrawText(str_lives, 100, 10, 30, RED);
+      
       for (int i = 0; i < MAX_ASTEROIDS; i++) {
           if (asteroids[i].state) {
               Asteroid_draw(&asteroids[i], WHITE);
@@ -149,7 +160,7 @@ int main(void) {
       }
       if (ship.intact) {
           DrawTriangleLines(ship.top, ship.left, ship.right, WHITE);
-          DrawCircleLinesV(ship.centroid, Vector2Distance(ship.top, ship.centroid) * (1 - 0.2), YELLOW);
+          // DrawCircleLinesV(ship.centroid, Vector2Distance(ship.top, ship.centroid) * (1 - 0.2), YELLOW);
           // if (is_fully_crossed_vert || is_fully_crossed_hor) {
           //    ship = ship_cpy;
           //    DrawTriangleLines(ship.top, ship.left, ship.right, WHITE);
@@ -166,22 +177,31 @@ int main(void) {
                   DrawCircleV(bullets[i].position, 2, RED);
               }
           }
+          if (asteroids_count == 0) {
+              DrawText("LEVEL CLEARED!", screenwidth / 2 - 50, screenheight / 2 - 20, 20, GREEN);
+          }
       } else if (lives > 0) {
           for (int i = 0; i < MAX_BULLETS; i++) {
               bullets[i].active = 0;
           }
-          DrawDestroyedShip(&ship);
-          // sleep(2);
-          init_ship(&ship, ship_length);
+          // DrawDestroyedShip(&ship);
+          float wait_time = 0;
+          wait_time += GetFrameTime();
+          if (wait_time >= 5) {
+              ship.intact = true;
+              init_ship(&ship, ship_length);
+          }
           
-      } else {
-          DrawText("GAME OVER!", screenwidth - 50, screenheight + 20, 20, RED);
+      } else {               
+          // for (int i = 0; i < MAX_ASTEROIDS; i++) {
+          //    asteroids[i].state = 0;
+          //}
+          DrawText("GAME OVER!", screenwidth / 2 - 50, screenheight / 2 - 20, 20, RED);
       }
-      if (asteroids_count == 0) {
-          DrawText("LEVEL CLEARED!", screenwidth - 50, screenheight + 20, 20, GREEN);
-      }
+      
       // DrawCircle(ship.centroid.x, ship.centroid.y, 5, RED);
       EndDrawing();
   }
+  
   CloseWindow();
 }
