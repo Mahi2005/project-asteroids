@@ -5,7 +5,7 @@
 #include "raymath.h"
 #include "ship.h"
 
-#define MAX_ASTEROIDS 3
+#define MAX_ASTEROIDS 6
 
 extern int asteroids_count;
 extern int total_score;
@@ -29,7 +29,7 @@ void Asteroid_draw(Asteroid_T* a, Color color);
 void Asteroid_init_vertex_codes(Asteroid_T* a, int screen_w, int screen_h);
 int Asteroid_is_partially_crossed(Asteroid_T* a);
 int Asteroid_is_fully_crossed(Asteroid_T* a);
-void Asteroid_screen_wraparound(Asteroid_T* a, Asteroid_T* a2, Asteroid_T* a3, Asteroid_T* a4, int screen_w, int screen_h);
+void Asteroid_screen_wraparound(Asteroid_T* a, Asteroid_T* a2,  int screen_w, int screen_h);
 void Asteroid_fragment_or_destruct(Asteroid_T* a);
 void Asteroid_strike_ship(Asteroid_T asteroids[], Ship_T *ship);
 #endif

@@ -23,7 +23,7 @@ Vector2 farthest_vertex_from_top(Ship_T *, int);
 Vector2 farthest_vertex_from_right(Ship_T *, int);
 Vector2 farthest_vertex_from_left(Ship_T *, int);
 int crossed_border_partial(Ship_T *, int, int);
-void init_ship(Ship_T *, int);
+void init_ship(Ship_T *ship, int shiplength);
 void move_ship(Ship_T *);
 void ship_screen_wraparound(Ship_T *, Ship_T *, int, int);
 void destruct_ship(Ship_T *);

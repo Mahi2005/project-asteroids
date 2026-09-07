@@ -10,8 +10,6 @@
 
 #define DEBUG 0
 
-int asteroids_count = MAX_ASTEROIDS; 
-int total_score = 0;
 
 Asteroid_T* Asteroid_new() {
     return malloc(sizeof(Asteroid_T));
@@ -30,7 +28,7 @@ void Asteroid_copy(Asteroid_T* a1, Asteroid_T* a2) {
     for (int i = 0; i < a1->n_vertices; i++) {
         a1->vertices[i] = a2->vertices[i];
     }
-    a1->bitcodes = malloc(sizeof(Vector2) * a1->n_vertices);
+    Asteroid_init_vertex_codes(a1, GetScreenWidth(), GetScreenHeight());
     for (int i = 0; i < a1->n_vertices; i++) {
         a1->bitcodes[i] = a2->bitcodes[i];
     }
@@ -48,8 +46,7 @@ void Asteroid_rand_init(Asteroid_T* a) {
     a->position = init_positions[GetRandomValue(0, 1)];                                 
     a->radius = GetRandomValue(500, 1000) / 10.0;
     a->n_vertices = 12;
-    a->vertices = malloc(sizeof(Vector2) * a->n_vertices);
-
+    if (a->vertices == NULL) a->vertices = malloc(sizeof(Vector2) * a->n_vertices);
     
     float x_min = a->position.x - a->radius;
     float x_max = a->position.x + a->radius;
@@ -156,42 +153,20 @@ int Asteroid_is_fully_crossed(Asteroid_T* a) {
 }
 
 
-void Asteroid_screen_wraparound(Asteroid_T *a, Asteroid_T *a2, Asteroid_T *a3, Asteroid_T *a4, int screen_w, int screen_h) {
+void Asteroid_screen_wraparound(Asteroid_T *a, Asteroid_T *a2,  int screen_w, int screen_h) {
     Asteroid_copy(a2, a);
-    Asteroid_copy(a3, a);
-    Asteroid_copy(a4, a);
     switch (Asteroid_is_partially_crossed(a)) {
     case 8: // partially crosses left boundary
         Asteroid_reposition(a2, Vector2Create(screen_w, 0));
         break;
-    case 10: // partially crosses top-left corner
-        Asteroid_reposition(a2, Vector2Create(screen_w, 0));
-        Asteroid_reposition(a3, Vector2Create(0, screen_h));
-        Asteroid_reposition(a4, Vector2Create(screen_w, screen_h));
-        break;
     case 2: // partially crosses top boundary
         Asteroid_reposition(a2, Vector2Create(0, screen_h));
-        break;
-    case 6: // partially crossed top-right corner
-        Asteroid_reposition(a2, Vector2Create(-screen_w, 0));
-        Asteroid_reposition(a3, Vector2Create(0, screen_h));
-        Asteroid_reposition(a4, Vector2Create(-screen_w, screen_h));
         break;
     case 4: // partially crosses right boundary
         Asteroid_reposition(a2, Vector2Create(-screen_w, 0));
         break;
-    case 5: // partially crosses bottom-right corner
-        Asteroid_reposition(a2, Vector2Create(-screen_w, 0));
-        Asteroid_reposition(a3, Vector2Create(0, -screen_h));
-        Asteroid_reposition(a4, Vector2Create(-screen_w, -screen_h));
-        break;
     case 1: // partially crosses bottom boundary
         Asteroid_reposition(a2, Vector2Create(0, -screen_h));
-        break;
-    case 11: // partially crosses bottom_left corner
-        Asteroid_reposition(a2, Vector2Create(screen_w, 0));
-        Asteroid_reposition(a3, Vector2Create(0, -screen_h));
-        Asteroid_reposition(a4, Vector2Create(screen_w, -screen_h));
         break;
     }
 }
@@ -199,11 +174,12 @@ void Asteroid_screen_wraparound(Asteroid_T *a, Asteroid_T *a2, Asteroid_T *a3, A
 void Asteroid_fragment_or_destruct(Asteroid_T *a) {
     if (a->state > 0) {
         a->state--;
-        total_score += 200;
+        int score = (a->state == 2) ? 100 : ((a->state == 1) ? 200 : 500);
+        total_score += score;
         Asteroid_rescale(a, 0.5);
-    } else {
-        asteroids_count--;
-        total_score += 500;
+        if (a->state == 0) {
+            asteroids_count--;
+        }
     }
 }
 
@@ -212,7 +188,11 @@ void Asteroid_strike_ship(Asteroid_T asteroids[], Ship_T *ship) {
     for (int i = 0; i < MAX_ASTEROIDS; i++) {
         float ship_radius = Vector2Distance(ship->top, ship->centroid) * 0.9;
         bool collision = CheckCollisionCircles(asteroids[i].position, asteroids[i].radius, ship->centroid, ship_radius);
-        if (asteroids[i].state && collision) ship->intact = 0;
+        if (asteroids[i].state && collision) {
+            ship->intact = 0;
+            asteroids[i].state = 0;
+        }
     }
 }
+
 
