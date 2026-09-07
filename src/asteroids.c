@@ -24,7 +24,7 @@ void Asteroid_push(Asteroid_T asteroids[], Asteroid_T* a) {
 }
 
 void Asteroid_delete(Asteroid_T asteroids[], int i) {
-    if ((i >= 0) && (i < asteroids_count)) {
+    if ((i >= 0) && (i < MAX_ASTEROIDS)) {
         for (int j = i; j < asteroids_count - 1; j++) {
             asteroids[j] = asteroids[j+1];
         }
@@ -139,7 +139,7 @@ void Asteroid_draw(Asteroid_T* a, Color color) {
         }
         DrawLineV(a->vertices[pos_y_n_max], a->vertices[a->n_vertices - 1], color);
         DrawLineV(a->vertices[a->n_vertices - 2], a->vertices[a->n_vertices - 1], color);
-        // DrawCircleLinesV(a->position, a->radius, YELLOW);
+        DrawCircleLinesV(a->position, a->radius, YELLOW);
     }
     if (DEBUG) {
         for (int i = 0; i < a->n_vertices; i++) {
@@ -180,8 +180,20 @@ int Asteroid_is_fully_crossed(Asteroid_T* a) {
 void Asteroid_screen_wraparound(Asteroid_T *a, Asteroid_T *a2,  int screen_w, int screen_h) {
     Asteroid_copy(a2, a);
     switch (Asteroid_is_partially_crossed(a)) {
+    case 10:
+        Asteroid_reposition(a2, Vector2Create(screen_w, screen_h));
+        break;
+    case 9:
+        Asteroid_reposition(a2, Vector2Create(screen_w, -screen_h));
+        break;
     case 8: // partially crosses left boundary
         Asteroid_reposition(a2, Vector2Create(screen_w, 0));
+        break;
+    case 6:
+        Asteroid_reposition(a2, Vector2Create(-screen_w, screen_h));
+        break;
+    case 5:
+        Asteroid_reposition(a2, Vector2Create(-screen_w, -screen_h));
         break;
     case 2: // partially crosses top boundary
         Asteroid_reposition(a2, Vector2Create(0, screen_h));
@@ -197,7 +209,6 @@ void Asteroid_screen_wraparound(Asteroid_T *a, Asteroid_T *a2,  int screen_w, in
 
 void Asteroid_fragment_or_destruct(Asteroid_T asteroids[], Asteroid_T *a) {
     if (a->state > 0) {
-        a->state--;
         int score = (a->state == 2) ? 100 : ((a->state == 1) ? 200 : 500);
         total_score += score;
         float rand_angle;
@@ -235,6 +246,7 @@ void Asteroid_fragment_or_destruct(Asteroid_T asteroids[], Asteroid_T *a) {
             Asteroid_rescale(a, 0.5);
             break;
         case 0:
+            Asteroid_init_to_zero(a);
             break;
         }
     }

@@ -19,6 +19,7 @@ typedef struct {
 } Ship_T;
 
 void Ship_reposition(Ship_T*, Vector2, float);
+void Ship_copy(Ship_T*, Ship_T*);
 // Vector2 farthest_vertex_from_bottom(Ship_T *, int);
 // Vector2 farthest_vertex_from_top(Ship_T *, int);
 // Vector2 farthest_vertex_from_right(Ship_T *, int);

@@ -208,9 +208,17 @@ void Ship_move(Ship_T *ship) {
 void Ship_screen_wraparound(Ship_T *ship, Ship_T *ship_cpy,  int screen_w, int screen_h) {
     Ship_copy(ship_cpy, ship);
     switch (Ship_is_partially_crossed(ship)) {
+    case 10: // partially crosses top-left corner
+        Ship_reposition(ship_cpy, Vector2Create(screen_w, screen_h), 0);
+    case 9:
+        Ship_reposition(ship_cpy, Vector2Create(screen_w, -screen_h), 0);
     case 8: // partially crosses left boundary
         Ship_reposition(ship_cpy, Vector2Create(screen_w, 0), 0);
         break;
+    case 6:
+        Ship_reposition(ship_cpy, Vector2Create(-screen_w, screen_h), 0);
+    case 5:
+        Ship_reposition(ship_cpy, Vector2Create(-screen_w, -screen_h), 0);
     case 2: // partially crosses top boundary
         Ship_reposition(ship_cpy, Vector2Create(0, screen_h), 0);
         break;

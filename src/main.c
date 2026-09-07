@@ -57,7 +57,7 @@ int main(void) {
 
   while (!WindowShouldClose() || IsKeyPressed(KEY_R)) {
 
-      for(int i = 0; i < asteroids_count; i++) {
+      for(int i = 0; i < MAX_ASTEROIDS; i++) {
           if (asteroids[i].state) {
               Asteroid_move(&asteroids[i]);
               Asteroid_init_vertex_codes(&asteroids[i], screenwidth, screenheight);
@@ -124,14 +124,15 @@ int main(void) {
       strcpy(str_lives, (lives == 3) ? "AAA" : ((lives == 2) ? "AA" : ((lives == 1) ? "A" : "")));
       DrawText(str_lives, 100, 10, 30, RED);
       
-      for (int i = 0; i < asteroids_count; i++) {
+      for (int i = 0; i < MAX_ASTEROIDS; i++) {
           if (asteroids[i].state) {
               Asteroid_draw(&asteroids[i], WHITE);
               if (Asteroid_is_partially_crossed(&asteroids[i])) {
                   Asteroid_draw(&asteroids_2[i], WHITE);
               }
               if (Asteroid_is_fully_crossed(&asteroids[i])) {
-                  asteroids[i] = asteroids_2[i];
+                  // asteroids[i] = asteroids_2[i];
+                  Asteroid_copy(&asteroids[i], &asteroids_2[i]);
               }
           } else {
               // DrawLineStrip(asteroids[i].vertices, asteroids[i].n_vertices, RED);
@@ -150,7 +151,7 @@ int main(void) {
               DrawTriangleLines(ship_cpy.top, ship_cpy.left, ship_cpy.right, WHITE);
           }
           if (Ship_is_fully_crossed(&ship)) {
-              ship = ship_cpy;
+              Ship_copy(&ship, &ship_cpy);
           }
           for (int i = 0; i < MAX_BULLETS; i++) {
               if (bullets[i].active) {
@@ -158,7 +159,7 @@ int main(void) {
               }
           }
           
-          if (asteroids_count == 0) {
+          if (asteroids_count <= 1) {
               DrawText("LEVEL CLEARED!", screenwidth / 2 - MeasureText("LEVEL CLEARED", 20) / 2, screenheight / 2 - 20, 20, GREEN);
           }
       } else if (lives > 0) {

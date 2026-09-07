@@ -38,11 +38,11 @@ void Bullet_strike_ship(Bullet_T *bullet, Ship_T *ship) {
 void Bullet_strike_asteroids(Bullet_T bullets[], Asteroid_T asteroids[]) {
     int error_factor = 0.1;
     for (int i = 0; i < MAX_BULLETS; i++) {
-        for (int j = 0; j < asteroids_count; j++) {
-            if (bullets[i].active && CheckCollisionPointCircle(bullets[i].position, asteroids[j].position, asteroids[j].radius * (1 - error_factor))) {
+        for (int j = 0; j < MAX_ASTEROIDS; j++) {
+            if ((bullets[i].active && asteroids[j].state) && CheckCollisionPointCircle(bullets[i].position, asteroids[j].position, asteroids[j].radius * (1 - error_factor))) {
+                asteroids[j].state--;
                 if (!asteroids[j].state) asteroids_count--;
                 bullets[i].active = 0;
-                
                 Asteroid_fragment_or_destruct(asteroids, &asteroids[j]);
             }
         }
