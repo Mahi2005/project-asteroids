@@ -26,10 +26,9 @@ void Bullet_screen_wraparound(Bullet_T bullets[], int screenwidth,
 
 void Bullet_strike_ship(Bullet_T *bullet, Ship_T *ship) {
     if (bullet->active) {
-        bool bullet_collision = CheckCollisionPointTriangle(
-                                                            bullet->position, ship->top, ship->right, ship->left);
+        bool bullet_collision = CheckCollisionPointTriangle(bullet->position, ship->top, ship->right, ship->left);
         if (bullet_collision) {
-            destruct_ship(ship);
+            ship->intact = 0;
             bullet->active = 0;
         }
     }
