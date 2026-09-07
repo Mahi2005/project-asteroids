@@ -194,7 +194,7 @@ void Asteroid_strike_ship(Asteroid_T asteroids[], Ship_T *ship) {
     for (int i = 0; i < MAX_ASTEROIDS; i++) {
         float ship_radius = Vector2Distance(ship->top, ship->centroid) * 0.9;
         bool collision = CheckCollisionCircles(asteroids[i].position, asteroids[i].radius, ship->centroid, ship_radius);
-        if (asteroids[i].state && collision) {
+        if ((asteroids[i].state && ship->intact) && collision) {
             ship->intact = 0;
             // asteroids[i].state = 0;
             lives--;

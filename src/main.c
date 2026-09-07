@@ -51,7 +51,8 @@ int main(void) {
   }
 
   SetTargetFPS(60);
-  
+  float wait_time = 2.0f;
+
   while (!WindowShouldClose() || IsKeyPressed(KEY_R)) {
 
       for(int i = 0; i < MAX_ASTEROIDS; i++) {
@@ -136,6 +137,9 @@ int main(void) {
                   asteroids_count);
           DrawText(debug_info, 410, 55, 12, RED);
       }
+      // Wait time variables;
+
+      
       char score[10];
       sprintf(score, "%d\n", total_score);
       DrawText(score, 10, 10, 30, BLUE);
@@ -185,11 +189,11 @@ int main(void) {
               bullets[i].active = 0;
           }
           // DrawDestroyedShip(&ship);
-          float wait_time = 0;
-          wait_time += GetFrameTime();
-          if (wait_time >= 5) {
+          wait_time -= GetFrameTime();
+          if (wait_time <= 0) {
               ship.intact = true;
               init_ship(&ship, ship_length);
+              wait_time = 2;
           }
           
       } else {               
