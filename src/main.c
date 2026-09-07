@@ -86,11 +86,8 @@ int main(void) {
       Bullet_strike_asteroids(bullets, asteroids);
       Asteroid_strike_ship(asteroids, &ship);
       if (asteroids_count == 0) {
-          level++;
+          // level++;
           asteroids_count = MAX_ASTEROIDS;
-          for (int i = 0; i < MAX_ASTEROIDS; i++) {
-              Asteroid_rand_init(&asteroids[i]);
-          }
       }
       Vector2 far_vertex_bot = farthest_vertex_from_bottom(&ship, screenheight);
       Vector2 far_vertex_top = farthest_vertex_from_top(&ship, screenheight);
@@ -179,6 +176,9 @@ int main(void) {
           
       } else {
           DrawText("GAME OVER!", screenwidth - 50, screenheight + 20, 20, RED);
+      }
+      if (asteroids_count == 0) {
+          DrawText("LEVEL CLEARED!", screenwidth - 50, screenheight + 20, 20, GREEN);
       }
       // DrawCircle(ship.centroid.x, ship.centroid.y, 5, RED);
       EndDrawing();
