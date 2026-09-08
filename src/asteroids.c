@@ -87,7 +87,7 @@ void Asteroid_rand_init(Asteroid_T* a) {
     init_positions[2] = Vector2Create(GetRandomValue(0, sc_w), GetRandomValue(-buffer / 2, 0));
     init_positions[3] = Vector2Create(GetRandomValue(0, sc_w), GetRandomValue(0, sc_h + buffer / 2));
     a->position = init_positions[GetRandomValue(0, 4)];
-    a->radius = get_random_float(30, 50);
+    a->radius = get_random_float(50, 70);
     a->n_vertices = 12;
     if (a->vertices == NULL) a->vertices = malloc(sizeof(Vector2) * a->n_vertices);
 
