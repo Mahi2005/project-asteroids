@@ -21,6 +21,6 @@ typedef struct {
 void Bullet_shoot(Bullet_T *bullet, Ship_T *ship);
 void Bullet_screen_wraparound(Bullet_T *bullet, int screenwidth, int screenheight);
 void Bullet_strike_ship(Bullet_T *bullet, Ship_T *ship);
-void Bullet_strike_asteroids(Bullet_T bullets[], Asteroid_T asteroids[]);
+void Bullet_strike_asteroids(Bullet_T bullets[], Asteroid_T asteroids[], Asteroid_T asteroids_2[]);
 
 #endif

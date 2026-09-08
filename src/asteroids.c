@@ -19,27 +19,17 @@ Asteroid_T* Asteroid_new() {
 void Asteroid_push(Asteroid_T asteroids[], Asteroid_T* a) {
     if (asteroids_count < MAX_ASTEROIDS) {
         asteroids[asteroids_count] = *a;
-        asteroids_count++;
     } 
 }
 
-void Asteroid_delete(Asteroid_T asteroids[], int i) {
-    if ((i >= 0) && (i < MAX_ASTEROIDS)) {
-        for (int j = i; j < asteroids_count - 1; j++) {
-            asteroids[j] = asteroids[j+1];
-        }
-        asteroids_count--;
+
+void Asteroid_track_count(Asteroid_T asteroids[]) {
+    asteroids_count = 0;
+    for (int i = 0; i < MAX_ASTEROIDS; i++) {
+        if (asteroids[i].state > 0) asteroids_count++;
     }
 }
 
-void Asteroid_init_to_zero(Asteroid_T* a){
-    a->position = Vector2Zero();
-    a->radius = 0;
-    a->n_vertices = 0;
-    a->vertices = NULL;
-    a->velocity = Vector2Zero();
-    a->state = 0;
-}
 
 void Asteroid_copy(Asteroid_T* a1, Asteroid_T* a2) {
     // copies the position, radius, vertices, bitcodes and velocity of a2 into a1
@@ -59,17 +49,7 @@ void Asteroid_copy(Asteroid_T* a1, Asteroid_T* a2) {
 }
 
 
-void Asteroid_rand_init(Asteroid_T* a) {
-    Vector2 init_positions[2];
-    int sc_w = GetScreenWidth();
-    int sc_h = GetScreenHeight();
-    init_positions[0] = Vector2Create(GetRandomValue(0, sc_w / 2 - 150), GetRandomValue(0, sc_h / 2 - 150));
-    init_positions[1] = Vector2Create(GetRandomValue(sc_w / 2 + 150, sc_w), GetRandomValue(sc_h / 2 + 150, sc_h));
-    a->position = init_positions[GetRandomValue(0, 1)];                                 
-    a->radius = GetRandomValue(500, 1000) / 10.0;
-    a->n_vertices = 12;
-    if (a->vertices == NULL) a->vertices = malloc(sizeof(Vector2) * a->n_vertices);
-    
+void Asteroid_shape_generate(Asteroid_T* a){
     float x_min = a->position.x - a->radius;
     float x_max = a->position.x + a->radius;
     float x = x_min;
@@ -82,22 +62,42 @@ void Asteroid_rand_init(Asteroid_T* a) {
         float y = a->position.y + sqrtf(powf(a->radius, 2) - powf(x - a->position.x, 2)); 
         a->vertices[i] = Vector2Create(x, y);
     }
-    x = a->position.x - a->radius;
+    x = x_min;
     for (int i = pos_y_n_max + 1; i <= neg_y_n_max; i++) {
         x = get_random_float(x, x_max);
         float y = a->position.y - sqrtf(powf(a->radius, 2) - powf(x - a->position.x, 2)); 
         a->vertices[i] = Vector2Create(x, y);
     }
     for (int i = 0; i < 4; i++) {
-        int n = GetRandomValue(0, a->n_vertices);
-        a->vertices[n] = Vector2ScaleRelative(a->vertices[n], GetRandomValue(50, 100) / 100.0, a->position);
+        int n = GetRandomValue(0, a->n_vertices - 1);
+        a->vertices[n] = Vector2ScaleRelative(a->vertices[n], get_random_float(0.5, 1), a->position);
     }
-    float speed = GetRandomValue(300, 600) / 10.0;
-    //float speed = 0;
-    float rotation = GetRandomValue(0, (2*PI)*100) / 100.0;
-    // float rotation = 0;
+}
+
+
+
+void Asteroid_rand_init(Asteroid_T* a) {
+    int sc_w = GetScreenWidth();
+    int sc_h = GetScreenHeight();
+    int buffer = 200;
+    Vector2 init_positions[4];
+    Vector2 init_directions[4];
+    init_positions[0] = Vector2Create(GetRandomValue(-buffer / 2, 0), GetRandomValue(0, sc_h));
+    init_positions[1] = Vector2Create(GetRandomValue(0, sc_w + buffer / 2), GetRandomValue(0, sc_h));
+    init_positions[2] = Vector2Create(GetRandomValue(0, sc_w), GetRandomValue(-buffer / 2, 0));
+    init_positions[3] = Vector2Create(GetRandomValue(0, sc_w), GetRandomValue(0, sc_h + buffer / 2));
+    a->position = init_positions[GetRandomValue(0, 4)];
+    a->radius = get_random_float(30, 50);
+    a->n_vertices = 12;
+    if (a->vertices == NULL) a->vertices = malloc(sizeof(Vector2) * a->n_vertices);
+
+    
+    float speed = get_random_float(30, 60);
+    float rotation = get_random_float(20 * DEG2RAD, 60 * DEG2RAD);
     a->velocity = Vector2Rotate(Vector2Scale(Vector2Create(0, -1), speed), rotation);
     a->state = 3;
+
+    Asteroid_shape_generate(a);
 }
 
 void Asteroid_reposition(Asteroid_T* a, Vector2 displacement) {
@@ -139,7 +139,7 @@ void Asteroid_draw(Asteroid_T* a, Color color) {
         }
         DrawLineV(a->vertices[pos_y_n_max], a->vertices[a->n_vertices - 1], color);
         DrawLineV(a->vertices[a->n_vertices - 2], a->vertices[a->n_vertices - 1], color);
-        DrawCircleLinesV(a->position, a->radius, YELLOW);
+        // DrawCircleLinesV(a->position, a->radius, YELLOW);
     }
     if (DEBUG) {
         for (int i = 0; i < a->n_vertices; i++) {
@@ -207,50 +207,62 @@ void Asteroid_screen_wraparound(Asteroid_T *a, Asteroid_T *a2,  int screen_w, in
     }
 }
 
-void Asteroid_fragment_or_destruct(Asteroid_T asteroids[], Asteroid_T *a) {
-    if (a->state > 0) {
-        int score = (a->state == 2) ? 100 : ((a->state == 1) ? 200 : 500);
-        total_score += score;
-        float rand_angle;
-        float rand_velocity_factor;
-        // Asteroid_rescale(a, 0.5);
-        switch (a->state) {
-        case 2:
-            Asteroid_T *medium_asteroid = Asteroid_new();
-            Asteroid_copy(medium_asteroid, a);
+void Asteroid_fragment_or_destruct(Asteroid_T asteroids[], Asteroid_T asteroids_2[], Asteroid_T *a) {
+    float rand_angle;
+    float rand_velocity_factor;
+    // Asteroid_rescale(a, 0.5);
+    switch (a->state) {
+    case 3:
+        a->state--;
+        Asteroid_T *medium_asteroid = Asteroid_new();
+        Asteroid_copy(medium_asteroid, a);
+        Asteroid_shape_generate(a);
+            
+        rand_angle = get_random_float(20 * DEG2RAD, 45 * DEG2RAD);
+        rand_velocity_factor = get_random_float(0.8, 1.6);
+        medium_asteroid->velocity = Vector2Scale(Vector2Rotate(medium_asteroid->velocity, rand_angle), rand_velocity_factor);
+        Asteroid_rescale(medium_asteroid, 0.5);
+        Asteroid_push(asteroids, medium_asteroid);
+        Asteroid_push(asteroids_2, medium_asteroid);
+        
+        rand_angle = get_random_float(20 * DEG2RAD, 45 * DEG2RAD);
+        rand_velocity_factor = get_random_float(0.8, 1.6);
+        a->velocity = Vector2Scale(Vector2Rotate(a->velocity, rand_angle), rand_velocity_factor);
+        Asteroid_rescale(a, 0.5);
 
-            rand_angle = get_random_float(-PI/4, PI/4);
-            rand_velocity_factor = get_random_float(0.8, 1.4);
-            medium_asteroid->velocity = Vector2Scale(Vector2Rotate(medium_asteroid->velocity, rand_angle), rand_velocity_factor);
-            Asteroid_rescale(medium_asteroid, 0.5);
-            Asteroid_push(asteroids, medium_asteroid);
+        // asteroids_count++;
+        total_score += 100;
+        break;
+    case 2:
+        a->state--;
+        Asteroid_T *small_asteroid = Asteroid_new();
+        Asteroid_copy(small_asteroid, a);
+        Asteroid_shape_generate(a);
+            
+        rand_angle = get_random_float(20 * DEG2RAD, 45 * DEG2RAD);
+        rand_velocity_factor = get_random_float(0.8, 1.4);
+        small_asteroid->velocity = Vector2Scale(Vector2Rotate(small_asteroid->velocity, rand_angle), rand_velocity_factor);
+        Asteroid_rescale(small_asteroid, 0.5);
+        Asteroid_push(asteroids, small_asteroid);
+        Asteroid_push(asteroids_2, small_asteroid);
+        
+        rand_angle = get_random_float(20 * DEG2RAD, 45 * DEG2RAD);
+        rand_velocity_factor = get_random_float(0.8, 1.4);
+        a->velocity = Vector2Scale(Vector2Rotate(a->velocity, rand_angle), rand_velocity_factor);
+        Asteroid_rescale(a, 0.5);
 
-            rand_angle = get_random_float(-PI/6, PI/6);
-            rand_velocity_factor = get_random_float(0.8, 1.4);
-            a->velocity = Vector2Scale(Vector2Rotate(a->velocity, rand_angle), rand_velocity_factor);
-            Asteroid_rescale(a, 0.5);
-            break;
-        case 1:
-            Asteroid_T *small_asteroid = Asteroid_new();
-            Asteroid_copy(small_asteroid, a);
-
-            rand_angle = get_random_float(-PI/4, PI/4);
-            rand_velocity_factor = get_random_float(0.8, 1.4);
-            small_asteroid->velocity = Vector2Scale(Vector2Rotate(small_asteroid->velocity, rand_angle), rand_velocity_factor);
-            Asteroid_rescale(small_asteroid, 0.5);
-            Asteroid_push(asteroids, small_asteroid);
-
-            rand_angle = get_random_float(-PI/6, PI/6);
-            rand_velocity_factor = get_random_float(0.8, 1.4);
-            a->velocity = Vector2Scale(Vector2Rotate(a->velocity, rand_angle), rand_velocity_factor);
-            Asteroid_rescale(a, 0.5);
-            break;
-        case 0:
-            Asteroid_init_to_zero(a);
-            break;
-        }
+        // asteroids_count++;
+        total_score += 200;
+        break;
+    case 1:
+        a->state--;
+        // asteroids_count--;
+        total_score += 500;
+        break;
     }
+    Asteroid_track_count(asteroids);
 }
+
 
 
 void Asteroid_strike_ship(Asteroid_T asteroids[], Ship_T *ship) {

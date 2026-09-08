@@ -9,17 +9,13 @@ void Bullet_screen_wraparound(Bullet_T bullets[], int screenwidth,
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (bullets[i].active) {
             if (bullets[i].position.x > screenwidth)
-                bullets[i].position =
-                    Vector2Add(bullets[i].position, Vector2Create(-screenwidth, 0));
+                bullets[i].position = Vector2Add(bullets[i].position, Vector2Create(-screenwidth, 0));
             if (bullets[i].position.x < 0)
-                bullets[i].position =
-                    Vector2Add(bullets[i].position, Vector2Create(screenwidth, 0));
+                bullets[i].position = Vector2Add(bullets[i].position, Vector2Create(screenwidth, 0));
             if (bullets[i].position.y > screenheight)
-                bullets[i].position =
-                    Vector2Add(bullets[i].position, Vector2Create(0, -screenheight));
+                bullets[i].position = Vector2Add(bullets[i].position, Vector2Create(0, -screenheight));
             if (bullets[i].position.y < 0)
-                bullets[i].position =
-                    Vector2Add(bullets[i].position, Vector2Create(0, screenheight));
+                bullets[i].position = Vector2Add(bullets[i].position, Vector2Create(0, screenheight));
         }
     }
 }
@@ -35,15 +31,15 @@ void Bullet_strike_ship(Bullet_T *bullet, Ship_T *ship) {
 }
 
 
-void Bullet_strike_asteroids(Bullet_T bullets[], Asteroid_T asteroids[]) {
+void Bullet_strike_asteroids(Bullet_T bullets[], Asteroid_T asteroids[], Asteroid_T asteroids_2[]) {
     int error_factor = 0.1;
     for (int i = 0; i < MAX_BULLETS; i++) {
         for (int j = 0; j < MAX_ASTEROIDS; j++) {
             if ((bullets[i].active && asteroids[j].state) && CheckCollisionPointCircle(bullets[i].position, asteroids[j].position, asteroids[j].radius * (1 - error_factor))) {
-                asteroids[j].state--;
-                if (!asteroids[j].state) asteroids_count--;
+                // asteroids[j].state--;
+                // if (!asteroids[j].state) asteroids_count--;
                 bullets[i].active = 0;
-                Asteroid_fragment_or_destruct(asteroids, &asteroids[j]);
+                Asteroid_fragment_or_destruct(asteroids, asteroids_2, &asteroids[j]);
             }
         }
     }
