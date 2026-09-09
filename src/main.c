@@ -14,7 +14,7 @@
 #include "menu.h"
 
 
-#define DEBUG 1
+#define DEBUG 0
 
 int lives = 3;
 int asteroids_count = INIT_ASTEROIDS;
@@ -40,7 +40,7 @@ int main(void) {
     // menu initialization
     menu_init(screenwidth, screenheight);
     
-    int buffer = 100;
+    int buffer = 0;
     // screenwidth += buffer;
     // screenheight += buffer;
     
@@ -63,7 +63,7 @@ int main(void) {
     
     SetTargetFPS(60);
     
-    float wait_time = 2.0f;
+    float wait_time = 0.0f;
     
     while (!WindowShouldClose() || IsKeyPressed(KEY_R)) {
         if (current_screen == MENU) {
@@ -149,7 +149,7 @@ int main(void) {
          
          // Collision detection, and corresponding fragment or destruct effects
          Bullet_strike_asteroids(bullets, asteroids, asteroids_2);
-         Asteroid_strike_ship(asteroids, &ship);
+         Asteroid_strike_ship(asteroids, asteroids_2, &ship);
          if (asteroids_count == 0) {
              
          }
@@ -197,7 +197,7 @@ int main(void) {
          
          if (ship.intact) {
              DrawTriangleLines(ship.top, ship.left, ship.right, WHITE);
-             // DrawCircleLinesV(ship.centroid, Vector2Distance(ship.top, ship.centroid) * (1 - 0.2), YELLOW);
+             DrawCircleLinesV(ship.centroid, Vector2Distance(ship.top, ship.centroid), YELLOW);
              // if (is_fully_crossed_vert || is_fully_crossed_hor) {
              //    ship = ship_cpy;
              //    DrawTriangleLines(ship.top, ship.left, ship.right, WHITE);
@@ -210,7 +210,7 @@ int main(void) {
              }
              for (int i = 0; i < MAX_BULLETS; i++) {
                  if (bullets[i].active) {
-                     DrawCircleV(bullets[i].position, 2, RED);
+                     DrawCircleV(bullets[i].position, 4, RED);
                  }
              }
              
@@ -236,7 +236,7 @@ int main(void) {
              if (wait_time <= 0) {
                  ship.intact = true;
                  Ship_init(&ship);
-                 wait_time = 2;
+                 wait_time = 0;
              }
              
          } else {               
@@ -250,7 +250,7 @@ int main(void) {
                  lives = 3;
                  total_score = 0;
                  level = 1;
-                 asteroids_count = MAX_ASTEROIDS;
+                 asteroids_count = INIT_ASTEROIDS + 3;
                  
                  for (int i = 0; i < MAX_BULLETS; i++) {
                      bullets[i].active = 0;
@@ -261,18 +261,18 @@ int main(void) {
                  
                  SetRandomSeed(time(0));
                  
-                 for (int i = 0; i < MAX_ASTEROIDS; i++) {
+                 for (int i = 0; i < asteroids_count; i++) {
                      Asteroid_rand_init(&asteroids[i]);
                  }
                  current_screen = PLAY;
-                 wait_time = 2.0f;
+                 wait_time = 0.0f;
              }
              
              else if (option == MAIN_MENU) {
                  lives = 3;
                  total_score = 0;
                  level = 1;
-                 asteroids_count = MAX_ASTEROIDS;
+                 asteroids_count = INIT_ASTEROIDS;
                  
                  for (int i = 0; i < MAX_BULLETS; i++) {
                      bullets[i].active = 0;
@@ -282,7 +282,7 @@ int main(void) {
                  Ship_init(&ship_cpy);
                  
                  current_screen = MENU;
-                 wait_time = 2.0f;
+                 wait_time = 0.0f;
              }
          }
          

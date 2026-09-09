@@ -5,7 +5,7 @@
 #include "raymath.h"
 #include "ship.h"
 
-#define MAX_ASTEROIDS 30
+#define MAX_ASTEROIDS 50
 #define INIT_ASTEROIDS 6
 
 extern int asteroids_count;
@@ -33,5 +33,5 @@ int Asteroid_is_partially_crossed(Asteroid_T* a);
 int Asteroid_is_fully_crossed(Asteroid_T* a);
 void Asteroid_screen_wraparound(Asteroid_T* a, Asteroid_T* a2,  int screen_w, int screen_h);
 void Asteroid_fragment_or_destruct(Asteroid_T asteroids[], Asteroid_T asteroids_2[], Asteroid_T* a);
-void Asteroid_strike_ship(Asteroid_T asteroids[], Ship_T *ship);
+void Asteroid_strike_ship(Asteroid_T asteroids[], Asteroid_T asteroids_2[], Ship_T *ship);
 #endif
