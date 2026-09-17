@@ -22,6 +22,7 @@ int total_score = 0;
 int level = 1;
 
 
+
 int main(void) {
 
     game_screen current_screen = MENU;
@@ -197,7 +198,7 @@ int main(void) {
          
          if (ship.intact) {
              DrawTriangleLines(ship.top, ship.left, ship.right, WHITE);
-             DrawCircleLinesV(ship.centroid, Vector2Distance(ship.top, ship.centroid), YELLOW);
+             if (DEBUG) DrawCircleLinesV(ship.centroid, Vector2Distance(ship.top, ship.centroid), YELLOW);
              // if (is_fully_crossed_vert || is_fully_crossed_hor) {
              //    ship = ship_cpy;
              //    DrawTriangleLines(ship.top, ship.left, ship.right, WHITE);

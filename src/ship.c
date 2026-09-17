@@ -3,8 +3,6 @@
 #include "utils.h"
 
 
-
-
 void Ship_reposition(Ship_T *ship, Vector2 displacement, float angle) {
   // orients the ship's top, left and right vertices after updating its centroid
   // i.e position by translation or rotation
@@ -21,109 +19,7 @@ void Ship_reposition(Ship_T *ship, Vector2 displacement, float angle) {
       ship->centroid);
 }
 
-/* Vector2 farthest_vertex_from_bottom(Ship_T *ship, int screenheight) { */
-/*   float a[3]; // order corresponds to top, right, left */
-/*   // each element is the perpendicular distance of the corresponding vertex from */
-/*   // the bottom screen border */
-/*   a[0] = screenheight - ship->top.y; */
-/*   a[1] = screenheight - ship->right.y; */
-/*   a[2] = screenheight - ship->left.y; */
-/*   int farthest_vertex = 0; */
-/*   float max_distance = -1; */
-/*   for (int i = 0; i < 3; i++) { */
-/*     if (a[i] > max_distance) { */
-/*       max_distance = a[i]; */
-/*       farthest_vertex = i; */
-/*     } */
-/*   } */
-/*   switch (farthest_vertex) { */
-/*   case 0: */
-/*     return ship->top; */
-/*   case 1: */
-/*     return ship->right; */
-/*   case 2: */
-/*     return ship->left; */
-/*   } */
-/*   return Vector2Zero(); */
-/* } */
 
-/* Vector2 farthest_vertex_from_top(Ship_T *ship, int screenheight) { */
-/*   float a[3]; // order corresponds to top, right, left */
-/*   // each element is the perpendicular distance of the corresponding vertex from */
-/*   // the bottom screen border */
-/*   a[0] = ship->top.y; */
-/*   a[1] = ship->right.y; */
-/*   a[2] = ship->left.y; */
-/*   int farthest_vertex = 0; */
-/*   float max_distance = -1; */
-/*   for (int i = 0; i < 3; i++) { */
-/*     if (a[i] > max_distance) { */
-/*       max_distance = a[i]; */
-/*       farthest_vertex = i; */
-/*     } */
-/*   } */
-/*   switch (farthest_vertex) { */
-/*   case 0: */
-/*     return ship->top; */
-/*   case 1: */
-/*     return ship->right; */
-/*   case 2: */
-/*     return ship->left; */
-/*   } */
-/*   return Vector2Zero(); */
-/* } */
-
-/* Vector2 farthest_vertex_from_right(Ship_T *ship, int screenwidth) { */
-/*   float a[3]; // order corresponds to top, right, left */
-/*   // each element is the perpendicular distance of the corresponding vertex from */
-/*   // the bottom screen border */
-/*   a[0] = screenwidth - ship->top.x; */
-/*   a[1] = screenwidth - ship->right.x; */
-/*   a[2] = screenwidth - ship->left.x; */
-/*   int farthest_vertex = 0; */
-/*   float max_distance = -1; */
-/*   for (int i = 0; i < 3; i++) { */
-/*     if (a[i] > max_distance) { */
-/*       max_distance = a[i]; */
-/*       farthest_vertex = i; */
-/*     } */
-/*   } */
-/*   switch (farthest_vertex) { */
-/*   case 0: */
-/*     return ship->top; */
-/*   case 1: */
-/*     return ship->right; */
-/*   case 2: */
-/*     return ship->left; */
-/*   } */
-/*   return Vector2Zero(); */
-/* } */
-
-/* Vector2 farthest_vertex_from_left(Ship_T *ship, int screenwidth) { */
-/*   float a[3]; // order corresponds to top, right, left */
-/*   // each element is the perpendicular distance of the corresponding vertex from */
-/*   // the bottom screen border */
-/*   a[0] = ship->top.x; */
-/*   a[1] = ship->right.x; */
-/*   a[2] = ship->left.x; */
-/*   int farthest_vertex = 0; */
-/*   float max_distance = -1; */
-/*   for (int i = 0; i < 3; i++) { */
-/*     if (a[i] > max_distance) { */
-/*       max_distance = a[i]; */
-/*       farthest_vertex = i; */
-/*     } */
-/*   } */
-/*   switch (farthest_vertex) { */
-/*   case 0: */
-/*     return ship->top; */
-/*   case 1: */
-/*     return ship->right; */
-/*   case 2: */
-/*     return ship->left; */
-/*   } */
-/*   return Vector2Zero(); */
-/* } */
 
 void Ship_init_vertex_codes(Ship_T* ship, int screen_w, int screen_h) {
     ship->bitcodes[0] = vertex_code(ship->top, screen_w, screen_h);

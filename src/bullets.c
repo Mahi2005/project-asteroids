@@ -1,5 +1,6 @@
-#include "asteroids.h"
 #include "bullets.h"
+#include "ship.h"
+#include "asteroids.h"
 
 
 

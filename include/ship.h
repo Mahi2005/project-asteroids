@@ -4,6 +4,9 @@
 #include "raylib.h"
 #include "raymath.h"
 
+extern int lives;
+extern int level;
+
 typedef struct {
     Vector2 centroid;
     Vector2 top;

@@ -1,6 +1,7 @@
 #include "raylib.h"
 #include "raymath.h"
 #include "asteroids.h"
+#include "ship.h"
 #include "bullets.h"
 #include "utils.h"
 #include <stdlib.h>
@@ -9,8 +10,6 @@
 #include <string.h>
 
 #define DEBUG 0
-
-extern int lives;
 
 Asteroid_T* Asteroid_new() {
     return malloc(sizeof(Asteroid_T));
@@ -144,7 +143,7 @@ void Asteroid_draw(Asteroid_T* a, Color color) {
         }
         DrawLineV(a->vertices[pos_y_n_max], a->vertices[a->n_vertices - 1], color);
         DrawLineV(a->vertices[a->n_vertices - 2], a->vertices[a->n_vertices - 1], color);
-        DrawCircleLinesV(a->position, a->radius, YELLOW);
+        if (DEBUG) DrawCircleLinesV(a->position, a->radius, YELLOW);
     }
     if (DEBUG) {
         for (int i = 0; i < a->n_vertices; i++) {
