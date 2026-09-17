@@ -2,7 +2,6 @@
 #define SHIP_H
 
 #include "raylib.h"
-#include "raymath.h"
 
 extern int lives;
 extern int level;

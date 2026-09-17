@@ -6,7 +6,7 @@ Rectangle menu_buttons[BUTTON_COUNT];
 const char *button_name[BUTTON_COUNT] = {"PLAY", "SETTINGS", "HIGH SCORES", "EXIT"};
 Rectangle gameover_buttons[2];
 const char *gameover_button_name[2] = { "PLAY AGAIN", "MAIN MENU"};
-int button_selected = 0;
+int button_selected = -1;
 
 
 
@@ -43,13 +43,13 @@ void menu_init(int screenwidth, int screenheight) {
 
     for (int i = 0; i < BUTTON_COUNT; i++) {
         menu_buttons[i] = (Rectangle){
-            .x = screenwidth / 2 - button_width / 2.0f,
+            .x = screenwidth / 2.0 - button_width / 2.0,
             .y = starting_y + i * (button_height + gap),
             .width = button_width,
             .height = button_height
         };
     }
-    button_selected = 0;
+    button_selected = -1;
 }
 
 int update_menu(int screenwidth, int screenheight) {
@@ -119,7 +119,6 @@ bool menu_draw_todo_screen(const char *title) {
 }
 
 gameOverOption draw_gameOver(int screenwidth, int screenheight, int score) {
-
     DrawRectangle(0, 0, screenwidth, screenheight,(Color){0, 0, 0, 160});
 
     const char *game_over = "GAME OVER";
@@ -141,14 +140,14 @@ gameOverOption draw_gameOver(int screenwidth, int screenheight, int score) {
     int start_y = screenheight / 2 + 10;
 
     gameover_buttons[0] = (Rectangle){
-        .x = screenwidth / 2 - button_width / 2.0,
+        .x = screenwidth / 2.0 - button_width / 2.0,
         .y = start_y,
         .width = button_width,
         .height = button_height
     };
 
     gameover_buttons[1] = (Rectangle){
-        .x = screenwidth / 2 - button_width / 2.0,
+        .x = screenwidth / 2.0 - button_width / 2.0,
         .y = start_y + button_height + gap,
         .width = button_width,
         .height = button_height

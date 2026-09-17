@@ -1,0 +1,92 @@
+[
+  {
+    "file": "src/menu.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-Iinclude",
+      "src/menu.c",
+      "-o",
+      "main"
+    ],
+    "directory": "/home/reza/Documents/programming/c/projects/project-asteroids",
+    "output": "main"
+  },
+  {
+    "file": "src/main.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-Iinclude",
+      "src/main.c",
+      "-o",
+      "main"
+    ],
+    "directory": "/home/reza/Documents/programming/c/projects/project-asteroids",
+    "output": "main"
+  },
+  {
+    "file": "src/asteroids.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-Iinclude",
+      "src/asteroids.c",
+      "-o",
+      "main"
+    ],
+    "directory": "/home/reza/Documents/programming/c/projects/project-asteroids",
+    "output": "main"
+  },
+  {
+    "file": "src/bullets.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-Iinclude",
+      "src/bullets.c",
+      "-o",
+      "main"
+    ],
+    "directory": "/home/reza/Documents/programming/c/projects/project-asteroids",
+    "output": "main"
+  },
+  {
+    "file": "src/ship.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-Iinclude",
+      "src/ship.c",
+      "-o",
+      "main"
+    ],
+    "directory": "/home/reza/Documents/programming/c/projects/project-asteroids",
+    "output": "main"
+  },
+  {
+    "file": "src/utils.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-Iinclude",
+      "src/utils.c",
+      "-o",
+      "main"
+    ],
+    "directory": "/home/reza/Documents/programming/c/projects/project-asteroids",
+    "output": "main"
+  }
+]
