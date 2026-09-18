@@ -1,7 +1,7 @@
 #include "bullets.h"
 #include "ship.h"
 #include "asteroids.h"
-
+#include <stdlib.h>
 
 
 
@@ -32,15 +32,15 @@ void Bullet_strike_ship(Bullet_T *bullet, Ship_T *ship) {
 }
 
 
-void Bullet_strike_asteroids(Bullet_T bullets[], Asteroid_T asteroids[], Asteroid_T asteroids_2[]) {
-    int error_factor = 0.1;
+void Bullet_strike_asteroids(Bullet_T bullets[], Asteroid_T asteroids[]) {
+    float error_factor = 0.1;
     for (int i = 0; i < MAX_BULLETS; i++) {
-        for (int j = 0; j < MAX_ASTEROIDS; j++) {
+        for (int j = 0; j < max_asteroids; j++) {
             if ((bullets[i].active && asteroids[j].state) && CheckCollisionPointCircle(bullets[i].position, asteroids[j].position, asteroids[j].radius * (1 - error_factor))) {
                 // asteroids[j].state--;
                 // if (!asteroids[j].state) asteroids_count--;
                 bullets[i].active = 0;
-                Asteroid_fragment_or_destruct(asteroids, asteroids_2, &asteroids[j]);
+                Asteroid_fragment_or_destruct(asteroids, &asteroids[j]);
             }
         }
     }
@@ -52,9 +52,8 @@ void Bullet_shoot(Bullet_T bullets[], Ship_T *ship) {
   for (int i = 0; i < MAX_BULLETS; i++) {
       if (IsKeyPressed(KEY_SPACE)) {
           if (!bullets[i].active) {
-              float shipradius = 50;
               bullets[i].position =
-              Vector2Add(ship->centroid, Vector2Scale(ship_direction, shipradius));
+              Vector2Add(ship->centroid, Vector2Scale(ship_direction, ship->radius));
               bullets[i].active = 1;
               bullets[i].velocity = Vector2Add(Vector2Scale(ship_direction, BULLET_SPEED), ship->velocity);
               bullets[i].lifetime = 0.0f;

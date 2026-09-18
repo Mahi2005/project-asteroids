@@ -137,7 +137,7 @@ gameOverOption draw_gameOver(int screenwidth, int screenheight, int score) {
     int button_width = 220;
     int button_height = 50;
     int gap = 20;
-    int start_y = screenheight / 2 + 10;
+    int start_y = screenheight / 2 + 200;
 
     gameover_buttons[0] = (Rectangle){
         .x = screenwidth / 2.0 - button_width / 2.0,

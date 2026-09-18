@@ -11,7 +11,8 @@ typedef struct {
     Vector2 top;
     Vector2 left;
     Vector2 right;
-    int *bitcodes;
+    float radius;
+    int bitcodes[3];
     Vector2 velocity;
     float rotation;
     float rotation_speed;
@@ -31,6 +32,6 @@ int Ship_is_partially_crossed(Ship_T* ship);
 int Ship_is_fully_crossed(Ship_T* ship);
 void Ship_init(Ship_T* ship);
 void Ship_move(Ship_T* ship);
-void Ship_screen_wraparound(Ship_T* ship, Ship_T* ship_cpy, int screen_w, int screen_h);
+void Ship_screen_wraparound(Ship_T *ship, int screen_w, int screen_h);
 void Ship_destroy(Ship_T *ship);
 #endif

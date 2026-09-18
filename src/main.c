@@ -3,6 +3,7 @@
 #include <limits.h>
 #include <time.h>
 #include <string.h>
+#include <stdlib.h>
 #include "raylib.h"
 #include "raymath.h"
 #include "ship.h"
@@ -11,29 +12,38 @@
 #include "menu.h"
 
 
-#define DEBUG 1
+#define DEBUG 0
+#define INIT_ASTEROIDS 2
+#define MAX_ASTEROIDS INIT_ASTEROIDS * 4
 
 int lives = 3;
+int max_asteroids = MAX_ASTEROIDS;
+int init_asteroids = INIT_ASTEROIDS;
 int asteroids_count = INIT_ASTEROIDS;
 int total_score = 0;
 int level = 0;
+int buffer = 200;
 
-
-static const int screenwidth = 800.0;
-static const int screenheight = 600.0;
+static const int screenwidth = 1300.0;
+static const int screenheight = 750.0;
 
 static game_screen current_screen = MENU;
 
-static Ship_T ship;
-static Ship_T ship_cpy;
-static Bullet_T bullets[MAX_BULLETS] = {0};
-static Asteroid_T asteroids[MAX_ASTEROIDS] = {0};
-static Asteroid_T asteroids_2[MAX_ASTEROIDS] = {0};
-static int buffer = 100;
 
-static float wait_time = 0.0f;
+
+static Ship_T ship;
+// static Ship_T ship_cpy;
+static Bullet_T bullets[MAX_BULLETS];
+static Asteroid_T* asteroids;
+// static Asteroid_T* asteroids_2;
+static bool level_up = false;
+
+static float level_wait_time = 2.5;
+static float ship_reinit_wait_time = 1.0;
 
 void Game_init() {
+    SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
+    
     InitWindow(screenwidth, screenheight, "Game");
     SetTargetFPS(60);
     // menu initialization
@@ -47,46 +57,12 @@ void Game_init() {
     
     // Ship initialization
     Ship_init(&ship);
-    Ship_init(&ship_cpy);
-    
+    // Ship_init(&ship_cpy);
+
     // Asteroids initialization
-    SetRandomSeed(time(0));
-    int rand_seeds[MAX_ASTEROIDS];
-    for (int i = 0; i < MAX_ASTEROIDS; i++) {
-        rand_seeds[i] = GetRandomValue(0, INT_MAX);
-    }
-    for (int i = 0; i < INIT_ASTEROIDS; i++) {
-        SetRandomSeed(rand_seeds[i]);
-        Asteroid_rand_init(&asteroids[i]);
-    }
-}
+    asteroids = calloc(max_asteroids, sizeof(Asteroid_T));
+    // asteroids_2 = calloc(max_asteroids, sizeof(Asteroid_T));
 
-void Game_state_reinit(int level) {
-    // if level = 0, this means to restart the game
-    // otherwise it implies levelling up, and thus increasing difficulting and
-    // unlocking other features which is to be implemented here
-    if (level == 0) {
-        lives = 3;
-        total_score = 0;
-    }
-
-    int asteroids_increment;
-    int init_asteroids;
-    int max_asteroids;
-
-    switch (level) {
-    case 0:
-        asteroids_increment = 0;
-        break;
-    case 1:
-        asteroids_increment = 5;
-        break;
-    }
-    init_asteroids = INIT_ASTEROIDS + asteroids_increment;
-    max_asteroids = init_asteroids * 4;
-    
-    Ship_init(&ship);
-    Ship_init(&ship_cpy);
     
     SetRandomSeed(time(0));
     int rand_seeds[max_asteroids];
@@ -99,10 +75,71 @@ void Game_state_reinit(int level) {
     }
 }
 
+void Game_state_reinit(int level) {
+    // if level = 0, this means to restart the game
+    // otherwise it implies levelling up, and thus increasing difficulting and
+    // unlocking other features which is to be implemented here
+
+    // Clean up the previous asteroids and their copies
+    
+    // asteroids = NULL;
+    // asteroids_2 = NULL;
+    
+    if (level == 0) {
+        lives = 3;
+        total_score = 0;
+        init_asteroids = INIT_ASTEROIDS;
+            max_asteroids = MAX_ASTEROIDS;
+    }
+    
+    int asteroids_increment = 0;
+    float velocity_multiplier = 1;
+    
+    switch (level) {
+    case 0:
+        asteroids_increment = 0;
+            velocity_multiplier = 1;
+            break;
+    case 1:
+        asteroids_increment = 5;
+        velocity_multiplier = 1.3;
+        break;
+    default:
+        asteroids_increment = 5;
+        velocity_multiplier = 1.3;
+    }
+    init_asteroids += asteroids_increment;
+    max_asteroids = init_asteroids * 4;
+    
+    asteroids_count = init_asteroids;
+    if (asteroids != NULL) {
+        free(asteroids);
+    }
+    
+    asteroids = calloc(max_asteroids, sizeof(Asteroid_T));
+    // asteroids_2 = realloc(asteroids_2, sizeof(Asteroid_T) * max_asteroids);
+    
+    Ship_init(&ship);
+    // Ship_init(&ship_cpy);
+    
+    SetRandomSeed(time(0));
+    int rand_seeds[max_asteroids];
+    for (int i = 0; i < max_asteroids; i++) {
+        rand_seeds[i] = GetRandomValue(0, INT_MAX);
+    }
+    for (int i = 0; i < init_asteroids; i++) {
+        SetRandomSeed(rand_seeds[i]);
+        Asteroid_rand_init(&asteroids[i]);
+        asteroids[i].velocity =  Vector2Scale(asteroids[i].velocity, velocity_multiplier);
+    }
+}
+
+
 
 
 
 void Game_draw_menu() {
+    BeginDrawing();
     if (current_screen == MENU) {
         ClearBackground(BLACK);
             
@@ -119,7 +156,7 @@ void Game_draw_menu() {
             current_screen = HIGH_SCORES;
         }
         else if (choice == BUTTON_EXIT) {
-            return;
+            exit(EXIT_SUCCESS);
         }
     } else if (current_screen == SETTINGS) {
             
@@ -136,108 +173,101 @@ void Game_draw_menu() {
         if (back) current_screen = MENU;
         // continue;
     } else if (current_screen == PLAY) {
+        EndDrawing();
         return;
     }
     /*     Game_update(); */
-         
+
     /*     Game_draw_frame(); */
-    /* } */         
-    else {               
-        // for (int i = 0; i < MAX_ASTEROIDS; i++) {
-        //    asteroids[i].state = 0;
-        //}
-        // DrawText("GAME OVER!", screenwidth / 2 - MeasureText("LEVEL CLEARED", 20) / 2, screenheight / 2 - 20, 20, RED);
-        
-    }
+    /* } */
+    EndDrawing();
 }
 
 void Game_draw_frame() {
     char debug_info[1000];
     BeginDrawing();
     ClearBackground(BLACK);
-    if (current_screen == MENU) Game_draw_menu();
-    else {
-        if (DEBUG) {
-            sprintf(debug_info,
-                    "Speed: %f\n"
-                    "Max number of asteroids: %d\n"
-                    "Number of asteroids active: %d\n",
-                    Vector2Length(ship.velocity),
-                    MAX_ASTEROIDS,
-                    asteroids_count);
-            DrawText(debug_info, 410, 55, 12, RED);
-        }
-        // draw_score
-        char score[10];
-        sprintf(score, "%d", total_score);
-        DrawText(score, 10, 10, 30, BLUE);
-         
-        // draw_lives
-        char str_lives[4];
-        strcpy(str_lives, (lives == 3) ? "AAA" : ((lives == 2) ? "AA" : ((lives == 1) ? "A" : "")));
-        DrawText(str_lives, 100, 10, 30, RED);
-         
-        for (int i = 0; i < MAX_ASTEROIDS; i++) {
-            if (asteroids[i].state) {
-                Asteroid_draw(&asteroids[i], WHITE);
-                if (Asteroid_is_partially_crossed(&asteroids[i])) {
-                    Asteroid_draw(&asteroids_2[i], WHITE);
-                }
-                if (Asteroid_is_fully_crossed(&asteroids[i])) {
-                    // asteroids[i] = asteroids_2[i];
-                    Asteroid_copy(&asteroids[i], &asteroids_2[i]);
-                }
-            } else {
-                // DrawLineStrip(asteroids[i].vertices, asteroids[i].n_vertices, RED);
-                // DrawText("DESTROYED", asteroids[i].position.x, asteroids[i].position.y, 10, YELLOW);
-                // draw_explosion_effect;
-            }
-        }
-         
-        if (ship.intact) {
-            DrawTriangleLines(ship.top, ship.left, ship.right, WHITE);
-            if (DEBUG) DrawCircleLinesV(ship.centroid, Vector2Distance(ship.top, ship.centroid), YELLOW);
-            // if (is_fully_crossed_vert || is_fully_crossed_hor) {
-            //    ship = ship_cpy;
-            //    DrawTriangleLines(ship.top, ship.left, ship.right, WHITE);
-            //}
-            if (Ship_is_partially_crossed(&ship)) {
-                DrawTriangleLines(ship_cpy.top, ship_cpy.left, ship_cpy.right, WHITE);
-            }
-            if (Ship_is_fully_crossed(&ship)) {
-                Ship_copy(&ship, &ship_cpy);
-            }
-            for (int i = 0; i < MAX_BULLETS; i++) {
-                if (bullets[i].active) {
-                    DrawCircleV(bullets[i].position, 4, RED);
-                }
-            }
-             
-            if (asteroids_count == 0) {
-                char level_msg[100];
-                // wait_time = 2.5;
-                // wait_time -= GetFrameTime();
-                // while (wait_time > 0) {
-                sprintf(level_msg, "LEVEL %d CLEARED", level);
-                DrawText(level_msg, screenwidth / 2 - MeasureText("LEVEL CLEARED", 20) / 2, screenheight / 2 - 20, 20, GREEN);
-                // }
-                // if (wait_time <= 0) {
-                //    level++;
-                //    asteroids_count = INIT_ASTEROIDS + 2;
-                 
-            }
-        } 
+    /* if (current_screen == MENU) { */
+    /*     Game_draw_menu(); */
+    /* } */
+    /* else { */
+    if (DEBUG) {
+        sprintf(debug_info,
+                "Speed: %f\n"
+                "Max number of asteroids: %d\n"
+                "Number of asteroids active: %d\n",
+                Vector2Length(ship.velocity),
+                max_asteroids,
+                asteroids_count);
+        DrawText(debug_info, 410, 55, 12, RED);
     }
+    // draw_score
+    char score[10];
+    sprintf(score, "%d", total_score);
+    DrawText(score, 10, 10, 30, BLUE);
+         
+    // draw_lives
+    char str_lives[4];
+    strcpy(str_lives, (lives == 3) ? "AAA" : ((lives == 2) ? "AA" : ((lives == 1) ? "A" : "")));
+    DrawText(str_lives, 100, 10, 30, RED);
+
+    // draw level
+    char str_level[10];
+    sprintf(str_level, "%d", level);
+    DrawText(str_level, 200, 10, 30, GREEN);
+        
+    for (int i = 0; i < max_asteroids; i++) {
+        if (asteroids[i].state) {
+            Asteroid_draw(&asteroids[i], WHITE);
+            /* if (Asteroid_is_partially_crossed(&asteroids[i])) { */
+            /*     Asteroid_draw(&asteroids_2[i], WHITE); */
+            /* } */
+            /* if (Asteroid_is_fully_crossed(&asteroids[i])) { */
+            /*     // asteroids[i] = asteroids_2[i]; */
+            /*     Asteroid_copy(&asteroids[i], &asteroids_2[i]); */
+            /* } */
+        } else {
+            // DrawLineStrip(asteroids[i].vertices, asteroids[i].n_vertices, RED);
+            // DrawText("DESTROYED", asteroids[i].position.x, asteroids[i].position.y, 10, YELLOW);
+            // draw_explosion_effect;
+        }
+    }
+         
+    if (ship.intact) {
+        DrawTriangleLines(ship.top, ship.left, ship.right, WHITE);
+        if (DEBUG) DrawCircleLinesV(ship.centroid, Vector2Distance(ship.top, ship.centroid), YELLOW);
+        // if (is_fully_crossed_vert || is_fully_crossed_hor) {
+        //    ship = ship_cpy;
+        //    DrawTriangleLines(ship.top, ship.left, ship.right, WHITE);
+        //}
+        /* if (Ship_is_partially_crossed(&ship)) { */
+        /*     DrawTriangleLines(ship_cpy.top, ship_cpy.left, ship_cpy.right, WHITE); */
+        /* } */
+        /* if (Ship_is_fully_crossed(&ship)) { */
+        /*     Ship_copy(&ship, &ship_cpy); */
+        /* } */
+        for (int i = 0; i < MAX_BULLETS; i++) {
+            if (bullets[i].active) {
+                DrawCircleV(bullets[i].position, 4, RED);
+            }
+        }
+             
+        if (asteroids_count == 0) {
+            char level_msg[100];
+            sprintf(level_msg, "LEVEL %d CLEARED", level);
+            DrawText(level_msg, screenwidth / 2 - MeasureText("LEVEL CLEARED", 20) / 2, screenheight / 2 - 20, 20, GREEN);
+        }
+    } 
     EndDrawing();
 }
 
 void Game_update() {
-    for(int i = 0; i < MAX_ASTEROIDS; i++) {
+    for(int i = 0; i < max_asteroids; i++) {
         if (asteroids[i].state) {
             Asteroid_move(&asteroids[i]);
             Asteroid_init_vertex_codes(&asteroids[i], screenwidth + buffer, screenheight + buffer);
             // Asteroid_init_vertex_codes(&asteroids_new_level[i], screenwidth, screenheight);
-            Asteroid_screen_wraparound(&asteroids[i], &asteroids_2[i], screenwidth + buffer, screenheight + buffer);
+            Asteroid_screen_wraparound(&asteroids[i], screenwidth + buffer, screenheight + buffer);
             // Asteroid_screen_wraparound(&asteroids_new_level[i], &asteroids_new_level_2[i], &asteroids_new_level_3[i], &asteroids_new_level_4[i], screenwidth, screenheight);          
             // if (level > 1) {
             //    asteroids[i] = asteroids_new_level[i];
@@ -246,35 +276,45 @@ void Game_update() {
             //    asteroids_4[i] = asteroids_new_level_4[i];
             //};
             // Asteroid_screen_wraparound(&asteroids[i], &asteroids_2[i], &asteroids_3[i], &asteroids_4[i], screenwidth, screenheight);
-            Asteroid_move(&asteroids_2[i]);
+            // Asteroid_move(&asteroids_2[i]);
         }// else {
         //   Asteroid_delete(asteroids, i);
         //}
     }
+    Asteroid_track_count(asteroids);
     // Ship
     if (ship.intact) {
         Ship_move(&ship);
         Ship_init_vertex_codes(&ship, screenwidth + buffer, screenheight + buffer);
-        Ship_screen_wraparound(&ship, &ship_cpy, screenwidth + buffer, screenheight + buffer);
-        Ship_move(&ship_cpy);
+        Ship_screen_wraparound(&ship, screenwidth + buffer, screenheight + buffer);
+        // Ship_move(&ship_cpy);
+
+        if (asteroids_count == 0) {
+            level_wait_time -= GetFrameTime();
+            if (level_wait_time <= 0) {
+                level_up = true;
+                level_wait_time = 2.5;
+            }
+        }
     } else if (lives > 0) {
         for (int i = 0; i < MAX_BULLETS; i++) {
             bullets[i].active = 0;
         }
         // DrawDestroyedShip(&ship);
-        wait_time -= GetFrameTime();
-        if (wait_time <= 0) {
-            ship.intact = true;
+        ship_reinit_wait_time -= GetFrameTime();
+        if (ship_reinit_wait_time <= 0) {
             Ship_init(&ship);
-            wait_time = 0;
+            ship_reinit_wait_time = 1.0;
         }
     } else {
         gameOverOption option = draw_gameOver(screenwidth, screenheight, total_score);
         if (option == PLAY_AGAIN) {
-            Game_state_reinit(0);
+            level = 0;
+            Game_state_reinit(level);
         } else if (option == MAIN_MENU) {
-            Game_state_reinit(0);
+            level = 0;
             current_screen = MENU;
+            Game_state_reinit(level);
         }
     }
          
@@ -284,18 +324,25 @@ void Game_update() {
          
          
     // Collision detection, and corresponding fragment or destruct effects
-    Bullet_strike_asteroids(bullets, asteroids, asteroids_2);
-    Asteroid_strike_ship(asteroids, asteroids_2, &ship);
-    if (asteroids_count == 0) {
-             
-    }
+    Bullet_strike_asteroids(bullets, asteroids);
+    Asteroid_strike_ship(asteroids, &ship);
+    
 }
 
 int main(void) {
     Game_init();
     while (!WindowShouldClose() || IsKeyPressed(KEY_R)) {
-        Game_update();
-        Game_draw_frame();
+        if ((current_screen == MENU) || (current_screen == SETTINGS) || (current_screen == HIGH_SCORES)) {
+            Game_draw_menu();
+        } else if (current_screen == PLAY) {
+            if (level_up) {
+                level++;
+                Game_state_reinit(level);
+                level_up = false;
+            }
+            Game_draw_frame();
+            Game_update();
+        }
     }
     CloseWindow();
 }

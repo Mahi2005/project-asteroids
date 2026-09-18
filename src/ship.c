@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include "ship.h"
 #include "utils.h"
-
+#include "asteroids.h"
 
 void Ship_reposition(Ship_T *ship, Vector2 displacement, float angle) {
   // orients the ship's top, left and right vertices after updating its centroid
@@ -11,12 +11,8 @@ void Ship_reposition(Ship_T *ship, Vector2 displacement, float angle) {
   ship->centroid = Vector2Add(ship->centroid, displacement);
   ship->top = Vector2Add(ship->top, displacement);
   ship->top = Vector2RotateAround(ship->top, angle, ship->centroid);
-  ship->right = Vector2ScaleRelative(
-      Vector2RotateAround(ship->top, 2 * PI / 3, ship->centroid), 0.5,
-      ship->centroid);
-  ship->left = Vector2ScaleRelative(
-      Vector2RotateAround(ship->top, 4 * PI / 3, ship->centroid), 0.5,
-      ship->centroid);
+  ship->right = Vector2RotateAround(ship->top, 150 * DEG2RAD, ship->centroid);
+  ship->left = Vector2RotateAround(ship->top, -150 * DEG2RAD, ship->centroid);
 }
 
 
@@ -42,7 +38,7 @@ int Ship_is_fully_crossed(Ship_T* ship) {
 }
 
 void Ship_init(Ship_T *ship) {
-    float ship_length = 50;
+    float ship_length = 20;
     float rotation = (1 / 10.0) * (PI / 6);
     float init_speed = 10;
     float acceleration = 500;
@@ -50,7 +46,7 @@ void Ship_init(Ship_T *ship) {
     ship->centroid = Vector2Create(GetScreenWidth() / 2.0, GetScreenHeight() / 2.0);
     ship->top = Vector2Add(ship->centroid, Vector2Create(0, -ship_length));
     Ship_reposition(ship, Vector2Zero(), rotation);
-    ship->bitcodes = malloc(sizeof(int) * 3);
+    ship->radius = ship_length;
     ship->velocity = Vector2Create(0, -init_speed);
     ship->acceleration = Vector2Create(0, -acceleration);
     ship->rotation = rotation;
@@ -58,13 +54,13 @@ void Ship_init(Ship_T *ship) {
     ship->max_speed = max_speed;
 }
 
+
 void Ship_copy(Ship_T* ship1, Ship_T* ship2) {
     // copies the position, radius, vertices, bitcodes and velocity of a2 into a1
     ship1->centroid = ship2->centroid;
     ship1->top = ship2->top;
     ship1->right = ship2->right;
     ship1->left = ship2->left;
-    ship1->bitcodes = malloc(sizeof(int) * 3);
     for (int i = 0; i < 3; i++) {
         ship1->bitcodes[i] = ship2->bitcodes[i];
     }
@@ -101,32 +97,32 @@ void Ship_move(Ship_T *ship) {
     }
 }
 
-void Ship_screen_wraparound(Ship_T *ship, Ship_T *ship_cpy,  int screen_w, int screen_h) {
-    Ship_copy(ship_cpy, ship);
+void Ship_screen_wraparound(Ship_T *ship, int screen_w, int screen_h) {
+    // Ship_copy(ship_cpy, ship);
     switch (Ship_is_partially_crossed(ship)) {
     case 10: // partially crosses top-left corner
-        Ship_reposition(ship_cpy, Vector2Create(screen_w, screen_h), 0);
+        Ship_reposition(ship, Vector2Create(screen_w, screen_h), 0);
         break;
     case 9:
-        Ship_reposition(ship_cpy, Vector2Create(screen_w, -screen_h), 0);
+        Ship_reposition(ship, Vector2Create(screen_w, -screen_h), 0);
         break;
     case 8: // partially crosses left boundary
-        Ship_reposition(ship_cpy, Vector2Create(screen_w, 0), 0);
+        Ship_reposition(ship, Vector2Create(screen_w, 0), 0);
         break;
     case 6:
-        Ship_reposition(ship_cpy, Vector2Create(-screen_w, screen_h), 0);
+        Ship_reposition(ship, Vector2Create(-screen_w, screen_h), 0);
         break;
     case 5:
-        Ship_reposition(ship_cpy, Vector2Create(-screen_w, -screen_h), 0);
+        Ship_reposition(ship, Vector2Create(-screen_w, -screen_h), 0);
         break;
     case 2: // partially crosses top boundary
-        Ship_reposition(ship_cpy, Vector2Create(0, screen_h), 0);
+        Ship_reposition(ship, Vector2Create(0, screen_h), 0);
         break;
     case 4: // partially crosses right boundary
-        Ship_reposition(ship_cpy, Vector2Create(-screen_w, 0), 0);
+        Ship_reposition(ship, Vector2Create(-screen_w, 0), 0);
         break;
     case 1: // partially crosses bottom boundary
-        Ship_reposition(ship_cpy, Vector2Create(0, -screen_h), 0);
+        Ship_reposition(ship, Vector2Create(0, -screen_h), 0);
         break;
     }
 }
@@ -137,4 +133,5 @@ void Ship_destroy(Ship_T *ship) {
   // displaced in random directions.
   ship->intact = false;
 }
+
 
