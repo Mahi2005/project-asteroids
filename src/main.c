@@ -32,6 +32,8 @@ static game_screen current_screen = MENU;
 
 
 static Ship_T ship;
+static Texture2D ship_texture;
+static Texture2D thruster_texture;
 // static Ship_T ship_cpy;
 static Bullet_T bullets[MAX_BULLETS];
 static Asteroid_T* asteroids;
@@ -45,6 +47,8 @@ void Game_init() {
     SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
     
     InitWindow(screenwidth, screenheight, "Game");
+    ship_texture = LoadTexture("assets/ship.png");
+    thruster_texture = LoadTexture("assets/ship_thruster.png");
     SetTargetFPS(60);
     // menu initialization
     menu_init(screenwidth, screenheight);
@@ -234,7 +238,42 @@ void Game_draw_frame() {
     }
          
     if (ship.intact) {
-        DrawTriangleLines(ship.top, ship.left, ship.right, WHITE);
+        Vector2 direction = Vector2Subtract(ship.top, ship.centroid);
+        float ship_angle = atan2f(direction.y, direction.x) * RAD2DEG + 90.0f;
+        // float scale = (ship.radius * 2.5) / ship_texture.width;
+        // Vector2 texture_size = {ship_texture.width * scale, ship_texture.height * scale};
+        // Vector2 draw_position = {ship.centroid.x - texture_size.x / 2.0, ship.centroid.y - texture_size.y / 2.0};
+        // DrawTextureEx(ship_texture, draw_position, ship_angle, scale, WHITE);
+        float ship_width = ship.radius * 2.5;
+        float ship_height = ship.radius * 2.5;
+
+        if(IsKeyDown(KEY_UP) || IsKeyDown(KEY_W)){
+            float thruster_width = ship_width * 0.35;
+            float thruster_height = ship_height * 0.5;
+            float back_offset = ship_height * 0.35;
+            float side_offset = ship_width * 0.28;
+
+            Vector2 local_left = {-back_offset, -side_offset};
+            Vector2 local_right = {-back_offset, side_offset};
+            float rotation = (ship_angle - 90.0) * DEG2RAD;
+            Vector2 world_left = Vector2Rotate(local_left, rotation);
+            Vector2 world_right = Vector2Rotate(local_right, rotation);
+            Vector2 thruster_left_pos = Vector2Add(ship.centroid, world_left);
+            Vector2 thruster_right_pos = Vector2Add(ship.centroid, world_right);
+
+            Rectangle thruster_source = { 0, 0, (float)thruster_texture.width, (float)thruster_texture.height };
+            Rectangle thruster_target_left = {thruster_left_pos.x, thruster_left_pos.y, thruster_width,thruster_height};
+            Rectangle thruster_target_right = {thruster_right_pos.x, thruster_right_pos.y, thruster_width,thruster_height};
+            Vector2 thruster_origin = {thruster_width / 2.0, 0};
+
+            DrawTexturePro(thruster_texture, thruster_source, thruster_target_left, thruster_origin, ship_angle, WHITE);
+            DrawTexturePro(thruster_texture, thruster_source, thruster_target_right, thruster_origin, ship_angle, WHITE);
+        }
+        Rectangle source_rect = {0, 0, (float)ship_texture.width, (float)ship_texture.height};
+        Rectangle target_rect = {ship.centroid.x, ship.centroid.y, ship_width, ship_height};
+        Vector2 ship_center = {ship_width / 2.0, ship_height / 2.0};
+        DrawTexturePro(ship_texture, source_rect, target_rect, ship_center, ship_angle, WHITE);
+        //DrawTriangleLines(ship.top, ship.left, ship.right, WHITE);
         if (DEBUG) DrawCircleLinesV(ship.centroid, Vector2Distance(ship.top, ship.centroid), YELLOW);
         // if (is_fully_crossed_vert || is_fully_crossed_hor) {
         //    ship = ship_cpy;
@@ -257,7 +296,7 @@ void Game_draw_frame() {
             sprintf(level_msg, "LEVEL %d CLEARED", level);
             DrawText(level_msg, screenwidth / 2 - MeasureText("LEVEL CLEARED", 20) / 2, screenheight / 2 - 20, 20, GREEN);
         }
-    } 
+    }
     EndDrawing();
 }
 
@@ -344,6 +383,8 @@ int main(void) {
             Game_update();
         }
     }
+    UnloadTexture(ship_texture);
+    UnloadTexture(thruster_texture);
     CloseWindow();
 }
 
