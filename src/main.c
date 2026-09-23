@@ -1,19 +1,18 @@
-#include <stdbool.h>
-#include <stdio.h>
-#include <limits.h>
-#include <time.h>
-#include <string.h> 
-#include <stdlib.h>
+#include "asteroids.h"
+#include "bullets.h"
+#include "menu.h"
 #include "raylib.h"
 #include "raymath.h"
 #include "ship.h"
-#include "bullets.h"
-#include "asteroids.h"
-#include "menu.h"
+#include <limits.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
-
-#define DEBUG 0
-#define INIT_ASTEROIDS 2
+#define DEBUG 1
+#define INIT_ASTEROIDS 6
 #define MAX_ASTEROIDS INIT_ASTEROIDS * 4
 
 int lives = 3;
@@ -29,46 +28,46 @@ static const int screenheight = 750.0;
 
 static game_screen current_screen = MENU;
 
-
-
 static Ship_T ship;
 static Texture2D ship_texture;
 static Texture2D thruster_texture;
-//Global sound and music variables
+// Global sound and music variables
 static Music menu_music;
 static Music game_music;
-static Sound shoot_sound ;
-static Sound exp_sound;
+Sound shoot_sound;
+Sound exp_sound;
 // static Ship_T ship_cpy;
 static Bullet_T bullets[MAX_BULLETS];
-static Asteroid_T* asteroids;
+static Asteroid_T *asteroids;
 // static Asteroid_T* asteroids_2;
 static bool level_up = false;
 
 static float level_wait_time = 2.5;
 static float ship_reinit_wait_time = 1.0;
+float ship_invuln_time = 3.0;
+bool ship_invuln_flag = true;
 
 void Game_init() {
     SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
-    
+
     InitWindow(screenwidth, screenheight, "Game");
     InitAudioDevice();
     game_music = LoadMusicStream("assets/gamemusic.mp3");
-    shoot_sound= LoadSound("assets/laserShoot.wav");
-    exp_sound= LoadSound("assets/explosion.wav");
+    shoot_sound = LoadSound("assets/laserShoot.wav");
+    exp_sound = LoadSound("assets/explosion.wav");
     PlayMusicStream(game_music);
     ship_texture = LoadTexture("assets/ship.png");
     thruster_texture = LoadTexture("assets/ship_thruster.png");
     SetTargetFPS(60);
     // menu initialization
     menu_init(screenwidth, screenheight);
-    
 
     // screenwidth += buffer;
     // screenheight += buffer;
-    
-    // Vector2 screen_center = {.x = screenwidth / 2.0, .y = screenheight / 2.0};
-    
+
+    // Vector2 screen_center = {.x = screenwidth / 2.0, .y = screenheight
+    // / 2.0};
+
     // Ship initialization
     Ship_init(&ship);
     // Ship_init(&ship_cpy);
@@ -77,7 +76,6 @@ void Game_init() {
     asteroids = calloc(max_asteroids, sizeof(Asteroid_T));
     // asteroids_2 = calloc(max_asteroids, sizeof(Asteroid_T));
 
-    
     SetRandomSeed(time(0));
     int rand_seeds[max_asteroids];
     for (int i = 0; i < max_asteroids; i++) {
@@ -95,25 +93,25 @@ void Game_state_reinit(int level) {
     // unlocking other features which is to be implemented here
 
     // Clean up the previous asteroids and their copies
-    
+
     // asteroids = NULL;
     // asteroids_2 = NULL;
-    
+
     if (level == 0) {
         lives = 3;
         total_score = 0;
         init_asteroids = INIT_ASTEROIDS;
-            max_asteroids = MAX_ASTEROIDS;
+        max_asteroids = MAX_ASTEROIDS;
     }
-    
+
     int asteroids_increment = 0;
     float velocity_multiplier = 1;
-    
+
     switch (level) {
     case 0:
         asteroids_increment = 0;
-            velocity_multiplier = 1;
-            break;
+        velocity_multiplier = 1;
+        break;
     case 1:
         asteroids_increment = 5;
         velocity_multiplier = 1.3;
@@ -124,18 +122,18 @@ void Game_state_reinit(int level) {
     }
     init_asteroids += asteroids_increment;
     max_asteroids = init_asteroids * 4;
-    
+
     asteroids_count = init_asteroids;
     if (asteroids != NULL) {
         free(asteroids);
     }
-    
+
     asteroids = calloc(max_asteroids, sizeof(Asteroid_T));
     // asteroids_2 = realloc(asteroids_2, sizeof(Asteroid_T) * max_asteroids);
-    
+
     Ship_init(&ship);
     // Ship_init(&ship_cpy);
-    
+
     SetRandomSeed(time(0));
     int rand_seeds[max_asteroids];
     for (int i = 0; i < max_asteroids; i++) {
@@ -144,47 +142,41 @@ void Game_state_reinit(int level) {
     for (int i = 0; i < init_asteroids; i++) {
         SetRandomSeed(rand_seeds[i]);
         Asteroid_rand_init(&asteroids[i]);
-        asteroids[i].velocity =  Vector2Scale(asteroids[i].velocity, velocity_multiplier);
+        asteroids[i].velocity =
+            Vector2Scale(asteroids[i].velocity, velocity_multiplier);
     }
 }
-
-
-
-
 
 void Game_draw_menu() {
     BeginDrawing();
     if (current_screen == MENU) {
         ClearBackground(BLACK);
-            
+
         int choice = update_menu(screenwidth, screenheight);
-            
-            
+
         if (choice == BUTTON_PLAY) {
             current_screen = PLAY;
-        }
-        else if (choice == BUTTON_SETTINGS) {
+        } else if (choice == BUTTON_SETTINGS) {
             current_screen = SETTINGS;
-        }
-        else if (choice == BUTTON_HIGHSCORES) {
+        } else if (choice == BUTTON_HIGHSCORES) {
             current_screen = HIGH_SCORES;
-        }
-        else if (choice == BUTTON_EXIT) {
+        } else if (choice == BUTTON_EXIT) {
             exit(EXIT_SUCCESS);
         }
     } else if (current_screen == SETTINGS) {
-            
+
         ClearBackground(BLACK);
         bool back = menu_draw_todo_screen("SETTINGS");
         if (back)
             current_screen = MENU;
         // continue;
-    } else if (current_screen == HIGH_SCORES){
-         
+    } else if (current_screen == HIGH_SCORES) {
+
         ClearBackground(BLACK);
         bool back = menu_draw_todo_screen("HIGH SCORES");
-         
-        if (back) current_screen = MENU;
+
+        if (back)
+            current_screen = MENU;
         // continue;
     } else if (current_screen == PLAY) {
         EndDrawing();
@@ -209,27 +201,29 @@ void Game_draw_frame() {
         sprintf(debug_info,
                 "Speed: %f\n"
                 "Max number of asteroids: %d\n"
-                "Number of asteroids active: %d\n",
-                Vector2Length(ship.velocity),
-                max_asteroids,
-                asteroids_count);
+                "Number of asteroids active: %d\n"
+                "Ship invulnerability timer: %f\n",
+                Vector2Length(ship.velocity), max_asteroids, asteroids_count,
+                ship_invuln_time);
         DrawText(debug_info, 410, 55, 12, RED);
     }
     // draw_score
     char score[10];
     sprintf(score, "%d", total_score);
     DrawText(score, 10, 10, 30, BLUE);
-         
+
     // draw_lives
     char str_lives[4];
-    strcpy(str_lives, (lives == 3) ? "AAA" : ((lives == 2) ? "AA" : ((lives == 1) ? "A" : "")));
+    strcpy(str_lives, (lives == 3)
+                          ? "AAA"
+                          : ((lives == 2) ? "AA" : ((lives == 1) ? "A" : "")));
     DrawText(str_lives, 100, 10, 30, RED);
 
     // draw level
     char str_level[10];
     sprintf(str_level, "%d", level);
     DrawText(str_level, 200, 10, 30, GREEN);
-        
+
     for (int i = 0; i < max_asteroids; i++) {
         if (asteroids[i].state) {
             Asteroid_draw(&asteroids[i], WHITE);
@@ -241,23 +235,25 @@ void Game_draw_frame() {
             /*     Asteroid_copy(&asteroids[i], &asteroids_2[i]); */
             /* } */
         } else {
-            // DrawLineStrip(asteroids[i].vertices, asteroids[i].n_vertices, RED);
-            // DrawText("DESTROYED", asteroids[i].position.x, asteroids[i].position.y, 10, YELLOW);
-            // draw_explosion_effect;
+            // DrawLineStrip(asteroids[i].vertices, asteroids[i].n_vertices,
+            // RED); DrawText("DESTROYED", asteroids[i].position.x,
+            // asteroids[i].position.y, 10, YELLOW); draw_explosion_effect;
         }
     }
-         
+
     if (ship.intact) {
         Vector2 direction = Vector2Subtract(ship.top, ship.centroid);
         float ship_angle = atan2f(direction.y, direction.x) * RAD2DEG + 90.0f;
         // float scale = (ship.radius * 2.5) / ship_texture.width;
-        // Vector2 texture_size = {ship_texture.width * scale, ship_texture.height * scale};
-        // Vector2 draw_position = {ship.centroid.x - texture_size.x / 2.0, ship.centroid.y - texture_size.y / 2.0};
-        // DrawTextureEx(ship_texture, draw_position, ship_angle, scale, WHITE);
+        // Vector2 texture_size = {ship_texture.width * scale,
+        // ship_texture.height * scale}; Vector2 draw_position =
+        // {ship.centroid.x - texture_size.x / 2.0, ship.centroid.y -
+        // texture_size.y / 2.0}; DrawTextureEx(ship_texture, draw_position,
+        // ship_angle, scale, WHITE);
         float ship_width = ship.radius * 2.5;
         float ship_height = ship.radius * 2.5;
 
-        if(IsKeyDown(KEY_UP) || IsKeyDown(KEY_W)){
+        if (IsKeyDown(KEY_UP) || IsKeyDown(KEY_W)) {
             float thruster_width = ship_width * 0.35;
             float thruster_height = ship_height * 0.5;
             float back_offset = ship_height * 0.35;
@@ -271,26 +267,41 @@ void Game_draw_frame() {
             Vector2 thruster_left_pos = Vector2Add(ship.centroid, world_left);
             Vector2 thruster_right_pos = Vector2Add(ship.centroid, world_right);
 
-            Rectangle thruster_source = { 0, 0, (float)thruster_texture.width, (float)thruster_texture.height };
-            Rectangle thruster_target_left = {thruster_left_pos.x, thruster_left_pos.y, thruster_width,thruster_height};
-            Rectangle thruster_target_right = {thruster_right_pos.x, thruster_right_pos.y, thruster_width,thruster_height};
+            Rectangle thruster_source = {0, 0, (float)thruster_texture.width,
+                                         (float)thruster_texture.height};
+            Rectangle thruster_target_left = {thruster_left_pos.x,
+                                              thruster_left_pos.y,
+                                              thruster_width, thruster_height};
+            Rectangle thruster_target_right = {thruster_right_pos.x,
+                                               thruster_right_pos.y,
+                                               thruster_width, thruster_height};
             Vector2 thruster_origin = {thruster_width / 2.0, 0};
 
-            DrawTexturePro(thruster_texture, thruster_source, thruster_target_left, thruster_origin, ship_angle, WHITE);
-            DrawTexturePro(thruster_texture, thruster_source, thruster_target_right, thruster_origin, ship_angle, WHITE);
+            DrawTexturePro(thruster_texture, thruster_source,
+                           thruster_target_left, thruster_origin, ship_angle,
+                           WHITE);
+            DrawTexturePro(thruster_texture, thruster_source,
+                           thruster_target_right, thruster_origin, ship_angle,
+                           WHITE);
         }
-        Rectangle source_rect = {0, 0, (float)ship_texture.width, (float)ship_texture.height};
-        Rectangle target_rect = {ship.centroid.x, ship.centroid.y, ship_width, ship_height};
+        Rectangle source_rect = {0, 0, (float)ship_texture.width,
+                                 (float)ship_texture.height};
+        Rectangle target_rect = {ship.centroid.x, ship.centroid.y, ship_width,
+                                 ship_height};
         Vector2 ship_center = {ship_width / 2.0, ship_height / 2.0};
-        DrawTexturePro(ship_texture, source_rect, target_rect, ship_center, ship_angle, WHITE);
-        //DrawTriangleLines(ship.top, ship.left, ship.right, WHITE);
-        if (DEBUG) DrawCircleLinesV(ship.centroid, Vector2Distance(ship.top, ship.centroid), YELLOW);
+        DrawTexturePro(ship_texture, source_rect, target_rect, ship_center,
+                       ship_angle, WHITE);
+        // DrawTriangleLines(ship.top, ship.left, ship.right, WHITE);
+        if (DEBUG)
+            DrawCircleLinesV(ship.centroid,
+                             Vector2Distance(ship.top, ship.centroid), YELLOW);
         // if (is_fully_crossed_vert || is_fully_crossed_hor) {
         //    ship = ship_cpy;
         //    DrawTriangleLines(ship.top, ship.left, ship.right, WHITE);
         //}
         /* if (Ship_is_partially_crossed(&ship)) { */
-        /*     DrawTriangleLines(ship_cpy.top, ship_cpy.left, ship_cpy.right, WHITE); */
+        /*     DrawTriangleLines(ship_cpy.top, ship_cpy.left, ship_cpy.right,
+         * WHITE); */
         /* } */
         /* if (Ship_is_fully_crossed(&ship)) { */
         /*     Ship_copy(&ship, &ship_cpy); */
@@ -300,33 +311,41 @@ void Game_draw_frame() {
                 DrawCircleV(bullets[i].position, 4, RED);
             }
         }
-             
+
         if (asteroids_count == 0) {
             char level_msg[100];
             sprintf(level_msg, "LEVEL %d CLEARED", level);
-            DrawText(level_msg, screenwidth / 2 - MeasureText("LEVEL CLEARED", 20) / 2, screenheight / 2 - 20, 20, GREEN);
+            DrawText(level_msg,
+                     screenwidth / 2 - MeasureText("LEVEL CLEARED", 20) / 2,
+                     screenheight / 2 - 20, 20, GREEN);
         }
     }
     EndDrawing();
 }
 
 void Game_update() {
-    for(int i = 0; i < max_asteroids; i++) {
+    for (int i = 0; i < max_asteroids; i++) {
         if (asteroids[i].state) {
             Asteroid_move(&asteroids[i]);
-            Asteroid_init_vertex_codes(&asteroids[i], screenwidth + buffer, screenheight + buffer);
-            // Asteroid_init_vertex_codes(&asteroids_new_level[i], screenwidth, screenheight);
-            Asteroid_screen_wraparound(&asteroids[i], screenwidth + buffer, screenheight + buffer);
-            // Asteroid_screen_wraparound(&asteroids_new_level[i], &asteroids_new_level_2[i], &asteroids_new_level_3[i], &asteroids_new_level_4[i], screenwidth, screenheight);          
-            // if (level > 1) {
+            Asteroid_init_vertex_codes(&asteroids[i], screenwidth + buffer,
+                                       screenheight + buffer);
+            // Asteroid_init_vertex_codes(&asteroids_new_level[i], screenwidth,
+            // screenheight);
+            Asteroid_screen_wraparound(&asteroids[i], screenwidth + buffer,
+                                       screenheight + buffer);
+            // Asteroid_screen_wraparound(&asteroids_new_level[i],
+            // &asteroids_new_level_2[i], &asteroids_new_level_3[i],
+            // &asteroids_new_level_4[i], screenwidth, screenheight); if (level
+            // > 1) {
             //    asteroids[i] = asteroids_new_level[i];
             //    asteroids_2[i] = asteroids_new_level_2[i];
             //    asteroids_3[i] = asteroids_new_level_3[i];
             //    asteroids_4[i] = asteroids_new_level_4[i];
             //};
-            // Asteroid_screen_wraparound(&asteroids[i], &asteroids_2[i], &asteroids_3[i], &asteroids_4[i], screenwidth, screenheight);
+            // Asteroid_screen_wraparound(&asteroids[i], &asteroids_2[i],
+            // &asteroids_3[i], &asteroids_4[i], screenwidth, screenheight);
             // Asteroid_move(&asteroids_2[i]);
-        }// else {
+        } // else {
         //   Asteroid_delete(asteroids, i);
         //}
     }
@@ -334,8 +353,10 @@ void Game_update() {
     // Ship
     if (ship.intact) {
         Ship_move(&ship);
-        Ship_init_vertex_codes(&ship, screenwidth + buffer, screenheight + buffer);
-        Ship_screen_wraparound(&ship, screenwidth + buffer, screenheight + buffer);
+        Ship_init_vertex_codes(&ship, screenwidth + buffer,
+                               screenheight + buffer);
+        Ship_screen_wraparound(&ship, screenwidth + buffer,
+                               screenheight + buffer);
         // Ship_move(&ship_cpy);
 
         if (asteroids_count == 0) {
@@ -345,6 +366,12 @@ void Game_update() {
                 level_wait_time = 2.5;
             }
         }
+
+        if (lives == 3) {
+            ship_invuln_time = 0;
+        } else {
+            ship_invuln_time -= GetFrameTime();
+        }
     } else if (lives > 0) {
         for (int i = 0; i < MAX_BULLETS; i++) {
             bullets[i].active = 0;
@@ -353,10 +380,18 @@ void Game_update() {
         ship_reinit_wait_time -= GetFrameTime();
         if (ship_reinit_wait_time <= 0) {
             Ship_init(&ship);
+            if (ship_invuln_flag) { // flag is set to true when ship is
+                                    // destroyed by Asteroid_strike_ship
+                                    // function
+                ship_invuln_time = 2.0;
+                ship_invuln_flag = false;
+            }
+            ship_invuln_time -= GetFrameTime();
             ship_reinit_wait_time = 1.0;
         }
     } else {
-        gameOverOption option = draw_gameOver(screenwidth, screenheight, total_score);
+        gameOverOption option =
+            draw_gameOver(screenwidth, screenheight, total_score);
         if (option == PLAY_AGAIN) {
             level = 0;
             Game_state_reinit(level);
@@ -366,27 +401,27 @@ void Game_update() {
             Game_state_reinit(level);
         }
     }
-         
+
     // Bullets
     Bullet_shoot(bullets, &ship);
-    Bullet_screen_wraparound(bullets, screenwidth + buffer, screenheight + buffer);
-         
-         
+    Bullet_screen_wraparound(bullets, screenwidth + buffer,
+                             screenheight + buffer);
+
     // Collision detection, and corresponding fragment or destruct effects
     Bullet_strike_asteroids(bullets, asteroids);
     bool was_intact = ship.intact;
     Asteroid_strike_ship(asteroids, &ship);
-    if(was_intact && !ship.intact) {
+    if (was_intact && !ship.intact) {
         PlaySound(exp_sound);
     }
-    
 }
 
 int main(void) {
     Game_init();
     while (!WindowShouldClose() || IsKeyPressed(KEY_R)) {
         UpdateMusicStream(game_music);
-        if ((current_screen == MENU) || (current_screen == SETTINGS) || (current_screen == HIGH_SCORES)) {
+        if ((current_screen == MENU) || (current_screen == SETTINGS) ||
+            (current_screen == HIGH_SCORES)) {
             Game_draw_menu();
         } else if (current_screen == PLAY) {
             if (level_up) {
@@ -408,4 +443,3 @@ int main(void) {
     CloseWindow();
     return 0;
 }
-
