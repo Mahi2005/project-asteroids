@@ -2,6 +2,8 @@
 #include "ship.h"
 #include "asteroids.h"
 #include <stdlib.h>
+extern Sound shoot_sound;
+extern Sound exp_sound;
 
 
 
@@ -41,6 +43,7 @@ void Bullet_strike_asteroids(Bullet_T bullets[], Asteroid_T asteroids[]) {
                 // if (!asteroids[j].state) asteroids_count--;
                 bullets[i].active = 0;
                 Asteroid_fragment_or_destruct(asteroids, &asteroids[j]);
+                PlaySound(exp_sound);
             }
         }
     }
@@ -57,6 +60,7 @@ void Bullet_shoot(Bullet_T bullets[], Ship_T *ship) {
               bullets[i].active = 1;
               bullets[i].velocity = Vector2Add(Vector2Scale(ship_direction, BULLET_SPEED), ship->velocity);
               bullets[i].lifetime = 0.0f;
+              PlaySound(shoot_sound);
               break;
           }
       }
