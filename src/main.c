@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <limits.h>
 #include <time.h>
-#include <string.h>
+#include <string.h> 
 #include <stdlib.h>
 #include "raylib.h"
 #include "raymath.h"
@@ -34,6 +34,11 @@ static game_screen current_screen = MENU;
 static Ship_T ship;
 static Texture2D ship_texture;
 static Texture2D thruster_texture;
+//Global sound and music variables
+static Music menu_music;
+static Music game_music;
+static Sound shoot_sound ;
+static Sound exp_sound;
 // static Ship_T ship_cpy;
 static Bullet_T bullets[MAX_BULLETS];
 static Asteroid_T* asteroids;
@@ -47,6 +52,11 @@ void Game_init() {
     SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
     
     InitWindow(screenwidth, screenheight, "Game");
+    InitAudioDevice();
+    game_music = LoadMusicStream("assets/gamemusic.mp3");
+    shoot_sound= LoadSound("assets/laserShoot.wav");
+    exp_sound= LoadSound("assets/explosion.wav");
+    PlayMusicStream(game_music);
     ship_texture = LoadTexture("assets/ship.png");
     thruster_texture = LoadTexture("assets/ship_thruster.png");
     SetTargetFPS(60);
@@ -364,13 +374,18 @@ void Game_update() {
          
     // Collision detection, and corresponding fragment or destruct effects
     Bullet_strike_asteroids(bullets, asteroids);
+    bool was_intact = ship.intact;
     Asteroid_strike_ship(asteroids, &ship);
+    if(was_intact && !ship.intact) {
+        PlaySound(exp_sound);
+    }
     
 }
 
 int main(void) {
     Game_init();
     while (!WindowShouldClose() || IsKeyPressed(KEY_R)) {
+        UpdateMusicStream(game_music);
         if ((current_screen == MENU) || (current_screen == SETTINGS) || (current_screen == HIGH_SCORES)) {
             Game_draw_menu();
         } else if (current_screen == PLAY) {
@@ -383,8 +398,14 @@ int main(void) {
             Game_update();
         }
     }
+    UnloadSound(shoot_sound);
+    UnloadSound(exp_sound);
+
+    UnloadMusicStream(game_music);
+    CloseAudioDevice();
     UnloadTexture(ship_texture);
     UnloadTexture(thruster_texture);
     CloseWindow();
+    return 0;
 }
 
