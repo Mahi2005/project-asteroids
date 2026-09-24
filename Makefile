@@ -9,7 +9,7 @@ TARGET = main
 LIBS = -lm -l raylib
 
 # Source files
-SRCS = src/menu.c src/main.c src/asteroids.c src/bullets.c src/ship.c src/utils.c
+SRCS = src/highscores.c src/menu.c src/main.c src/asteroids.c src/bullets.c src/ship.c src/utils.c
 
 # Build target
 all: $(TARGET)

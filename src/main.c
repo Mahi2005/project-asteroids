@@ -4,6 +4,7 @@
 #include "raylib.h"
 #include "raymath.h"
 #include "ship.h"
+#include "highscores.h"
 #include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -31,6 +32,7 @@ static game_screen current_screen = MENU;
 static Ship_T ship;
 static Texture2D ship_texture;
 static Texture2D thruster_texture;
+static Texture2D back_texture;
 // Global sound and music variables
 static Music menu_music;
 static Music game_music;
@@ -39,6 +41,10 @@ Sound exp_sound;
 // static Ship_T ship_cpy;
 static Bullet_T bullets[MAX_BULLETS];
 static Asteroid_T *asteroids;
+
+static int high_scores[NUM_OF_SCORES];
+static bool score_recorded = false;
+
 // static Asteroid_T* asteroids_2;
 static bool level_up = false;
 
@@ -58,9 +64,12 @@ void Game_init() {
     PlayMusicStream(game_music);
     ship_texture = LoadTexture("assets/ship.png");
     thruster_texture = LoadTexture("assets/ship_thruster.png");
+    back_texture = LoadTexture("assets/back_btn.png");
     SetTargetFPS(60);
     // menu initialization
     menu_init(screenwidth, screenheight);
+
+    load_highscores(high_scores);
 
     // screenwidth += buffer;
     // screenheight += buffer;
@@ -173,7 +182,7 @@ void Game_draw_menu() {
     } else if (current_screen == HIGH_SCORES) {
 
         ClearBackground(BLACK);
-        bool back = menu_draw_todo_screen("HIGH SCORES");
+        bool back = menu_draw_highscores(screenwidth, screenheight, high_scores, NUM_OF_SCORES, back_texture);
 
         if (back)
             current_screen = MENU;
@@ -390,15 +399,23 @@ void Game_update() {
             ship_reinit_wait_time = 1.0;
         }
     } else {
+        if (!score_recorded) {
+        check_highscores(high_scores, total_score);
+        save_highscores(high_scores);
+        score_recorded = true;
+        }
+
         gameOverOption option =
             draw_gameOver(screenwidth, screenheight, total_score);
         if (option == PLAY_AGAIN) {
             level = 0;
             Game_state_reinit(level);
+            score_recorded = false;
         } else if (option == MAIN_MENU) {
             level = 0;
             current_screen = MENU;
             Game_state_reinit(level);
+            score_recorded = false;
         }
     }
 
@@ -440,6 +457,7 @@ int main(void) {
     CloseAudioDevice();
     UnloadTexture(ship_texture);
     UnloadTexture(thruster_texture);
+    UnloadTexture(back_texture);
     CloseWindow();
     return 0;
 }

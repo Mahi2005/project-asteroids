@@ -176,3 +176,36 @@ gameOverOption draw_gameOver(int screenwidth, int screenheight, int score) {
 
     return GAMEOVER;
 }
+
+bool draw_back_btn(Texture2D back_texture){
+    float size = 40;
+    Rectangle back_btn = {20 , 20, size, size};
+    Vector2 mouse = GetMousePosition();
+    bool hovered = CheckCollisionPointRec(mouse,back_btn);
+    Color tint = hovered ? YELLOW : WHITE;
+
+    Rectangle source = {0, 0, (float)back_texture.width, (float)back_texture.height};
+    DrawTexturePro(back_texture, source, back_btn, (Vector2){0,0}, 0.0, tint);
+    bool mouse_clicked = hovered && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+    bool key_clicked = IsKeyPressed(KEY_BACKSPACE);
+    return mouse_clicked || key_clicked;
+}
+
+bool menu_draw_highscores(int screenwidth, int screenheight, int scores[], int count, Texture2D back_texture){
+    char *title = "HIGH SCORES";
+    int title_size = 30;
+    DrawText(title, screenwidth / 2 - MeasureText(title, title_size) / 2, screenheight / 2 - 150, title_size, WHITE);
+
+    int score_size = 24;
+    int starting_y = screenheight / 2 - 80;
+    char line[64];
+
+    for(int i = 0; i < count; i++){
+        if(scores[i] <= 0) break;
+        sprintf(line, "%d. %d", i + 1, scores[i]);
+        DrawText(line, screenwidth / 2 - MeasureText(title, title_size) / 2, starting_y, score_size, RAYWHITE);
+        starting_y += score_size + 15;
+    }
+
+    return draw_back_btn(back_texture);
+}
