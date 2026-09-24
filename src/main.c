@@ -5,6 +5,7 @@
 #include "raymath.h"
 #include "ship.h"
 #include "highscores.h"
+#include "savegame.h"
 #include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -67,7 +68,8 @@ void Game_init() {
     back_texture = LoadTexture("assets/back_btn.png");
     SetTargetFPS(60);
     // menu initialization
-    menu_init(screenwidth, screenheight);
+    bool has_saved_game = savegame_exists();
+    menu_init(screenwidth, screenheight,has_saved_game);
 
     load_highscores(high_scores);
 
@@ -76,7 +78,6 @@ void Game_init() {
 
     // Vector2 screen_center = {.x = screenwidth / 2.0, .y = screenheight
     // / 2.0};
-
     // Ship initialization
     Ship_init(&ship);
     // Ship_init(&ship_cpy);
@@ -163,7 +164,16 @@ void Game_draw_menu() {
 
         int choice = update_menu(screenwidth, screenheight);
 
-        if (choice == BUTTON_PLAY) {
+        if (choice == BUTTON_CONTINUE) {
+            savegame_load(&ship, bullets, &asteroids, &max_asteroids, &init_asteroids, &asteroids_count, &total_score, &lives, &level);
+            current_screen = PLAY;
+        } else if(choice == BUTTON_NEWGAME){
+            savegame_delete();
+            level = 0;
+            Game_state_reinit(level);
+            current_screen = PLAY;
+            menu_init(screenwidth, screenheight, false);
+        } else if(choice == BUTTON_PLAY){
             current_screen = PLAY;
         } else if (choice == BUTTON_SETTINGS) {
             current_screen = SETTINGS;
@@ -403,6 +413,7 @@ void Game_update() {
         check_highscores(high_scores, total_score);
         save_highscores(high_scores);
         score_recorded = true;
+        savegame_delete();
         }
 
         gameOverOption option =
@@ -416,6 +427,7 @@ void Game_update() {
             current_screen = MENU;
             Game_state_reinit(level);
             score_recorded = false;
+            menu_init(screenwidth, screenheight, savegame_exists());
         }
     }
 
@@ -450,6 +462,14 @@ int main(void) {
             Game_update();
         }
     }
+
+    if(current_screen == PLAY && lives > 0) {
+        savegame_write(&ship, bullets, asteroids, max_asteroids, init_asteroids, asteroids_count, total_score, lives, level);
+    }
+    else {
+        savegame_delete();
+    }
+
     UnloadSound(shoot_sound);
     UnloadSound(exp_sound);
 
