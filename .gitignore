@@ -2,6 +2,7 @@
 # Executables (matching the TARGET name in your Makefile)
 main
 main.exe
+*.exe
 
 # Object files and libraries
 *.o
