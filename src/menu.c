@@ -13,6 +13,9 @@ Rectangle gameover_buttons[2];
 const char *gameover_button_name[2] = { "PLAY AGAIN", "MAIN MENU"};
 int button_selected = -1;
 
+Rectangle pause_buttons[4];
+const char *pause_button_name[4] = {"CONTINUE", "RESTART", "MAIN MENU", "EXIT"};
+
 
 
 bool buttonClicked(Rectangle rectangle, bool is_selected) {
@@ -226,7 +229,7 @@ bool draw_back_btn(Texture2D back_texture){
     return mouse_clicked || key_clicked;
 }
 
-bool menu_draw_highscores(int screenwidth, int screenheight, int scores[], int count, Texture2D back_texture){
+bool menu_draw_highscores(int screenwidth, int screenheight, HighScore_T scores[], int count, Texture2D back_texture){
     char *title = "HIGH SCORES";
     int title_size = 30;
     DrawText(title, screenwidth / 2 - MeasureText(title, title_size) / 2, screenheight / 2 - 150, title_size, WHITE);
@@ -236,11 +239,94 @@ bool menu_draw_highscores(int screenwidth, int screenheight, int scores[], int c
     char line[64];
 
     for(int i = 0; i < count; i++){
-        if(scores[i] <= 0) break;
-        sprintf(line, "%d. %d", i + 1, scores[i]);
-        DrawText(line, screenwidth / 2 - MeasureText(title, title_size) / 2, starting_y, score_size, RAYWHITE);
+        if(scores[i].score <= 0) break;
+        sprintf(line, "%d. %d - %s", i + 1, scores[i].score, scores[i].name);
+        DrawText(line, screenwidth / 2 - MeasureText(line, score_size) / 2, starting_y, score_size, RAYWHITE);
         starting_y += score_size + 15;
     }
 
     return draw_back_btn(back_texture);
+}
+
+bool draw_pause_btn(Texture2D pause_texture){
+    float size = 40;
+    Rectangle pause_button = {GetScreenWidth() - size - 20, 20, size, size};
+    Vector2 mouse = GetMousePosition();
+    bool hovered = CheckCollisionPointRec(mouse, pause_button);
+    Color tint = hovered ? YELLOW : WHITE;
+
+    Rectangle source = {0, 0, (float)pause_texture.width, (float)pause_texture.height};
+    DrawTexturePro(pause_texture, source, pause_button, (Vector2){0,0}, 0.0, tint);
+
+    bool mouse_clicked = hovered && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+    bool key_clicked = IsKeyPressed(KEY_P);
+    return mouse_clicked || key_clicked;
+}
+
+pauseOption draw_pause_menu(int screenwidth, int screenheight){
+    DrawRectangle(0, 0, screenwidth, screenheight, (Color){0, 0, 0, 160});
+    const char *title ="PAUSED";
+    int title_size = 40;
+    DrawText(title, screenwidth / 2 - MeasureText(title,title_size) / 2, screenheight / 2 - 180, title_size, WHITE);
+    
+    int btn_width = 220;
+    int btn_height = 50;
+    int gap = 20;
+    int starting_y = screenheight / 2 - 70;
+
+    for(int i = 0; i < 4; i++){
+        pause_buttons[i] = (Rectangle){
+            .x = screenwidth / 2.0 - btn_width / 2.0,
+            .y = starting_y + i * (btn_height + gap),
+            .width = btn_width,
+            .height = btn_height
+        };
+    }
+
+    for(int i = 0; i < 4; i++){
+        draw_button(pause_buttons[i], pause_button_name[i], false);
+    }
+
+    if(buttonClicked(pause_buttons[0], false)) return PAUSE_CONTINUE;
+    if(buttonClicked(pause_buttons[1], false)) return PAUSE_RESTART;
+    if(buttonClicked(pause_buttons[2], false)) return PAUSE_MAINMENU;
+    if(buttonClicked(pause_buttons[3], false)) return PAUSE_EXIT;
+
+    return PAUSE_NONE;
+}
+
+bool draw_name_entry(int screenwidth, int screenheight, int score, char *name_buffer, int max_len){
+    DrawRectangle(0, 0, screenwidth, screenheight, (Color){0, 0, 0, 180});
+
+    const char *title = "NEW HIGH SCORE!";
+    int title_size = 36;
+    DrawText(title, screenwidth / 2 - MeasureText(title, title_size) / 2, screenheight / 2 - 120, title_size, YELLOW);
+    char score_text[32];
+    sprintf(score_text, "Score: %d", score);
+    DrawText(score_text, screenwidth / 2 - MeasureText(score_text, 24) / 2, screenheight / 2 - 70, 24 , WHITE);
+
+    const char *prompt = "Enter your name:";
+    DrawText(prompt, screenwidth / 2 - MeasureText(prompt, 20) / 2, screenheight / 2 - 20, 20, WHITE);
+
+    int len = strlen(name_buffer);
+    int ch = GetCharPressed();
+    while(ch > 0) {
+        if (ch >= 32 && ch <= 125 && len < max_len - 1) {
+            name_buffer[len] = (char)ch;
+            name_buffer[len + 1] = '\0';
+            len++;
+        }
+        ch = GetCharPressed();
+    }
+    if(IsKeyPressed(KEY_BACKSPACE) && len > 0){
+        name_buffer[len - 1] = '\0';
+    }
+
+    Rectangle box = {screenwidth / 2 - 150, screenheight / 2 + 20, 300, 40};
+    DrawRectangleLinesEx(box, 2, WHITE);
+    DrawText(name_buffer, box.x + 10, box.y + 10, 20, YELLOW);
+
+    const char *confirm = "Press ENTER to confirm";
+    DrawText(confirm, screenwidth / 2 - MeasureText(confirm, 16) / 2, screenheight / 2 + 80, 16, GRAY);
+    return IsKeyPressed(KEY_ENTER) && len > 0;
 }

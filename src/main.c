@@ -34,6 +34,7 @@ static Ship_T ship;
 static Texture2D ship_texture;
 static Texture2D thruster_texture;
 static Texture2D back_texture;
+static Texture2D pause_texture;
 // Global sound and music variables
 static Music menu_music;
 static Music game_music;
@@ -43,8 +44,12 @@ Sound exp_sound;
 static Bullet_T bullets[MAX_BULLETS];
 static Asteroid_T *asteroids;
 
-static int high_scores[NUM_OF_SCORES];
+static HighScore_T high_scores[NUM_OF_SCORES];
+static bool is_entering_name = false;
+static char name_buffer[NAME_MAX_LEN] = "";
 static bool score_recorded = false;
+static bool is_paused = false;
+static bool should_exit = false;
 
 // static Asteroid_T* asteroids_2;
 static bool level_up = false;
@@ -66,6 +71,7 @@ void Game_init() {
     ship_texture = LoadTexture("assets/ship.png");
     thruster_texture = LoadTexture("assets/ship_thruster.png");
     back_texture = LoadTexture("assets/back_btn.png");
+    pause_texture = LoadTexture("assets/pause_btn.png");
     SetTargetFPS(60);
     // menu initialization
     bool has_saved_game = savegame_exists();
@@ -339,10 +345,40 @@ void Game_draw_frame() {
                      screenheight / 2 - 20, 20, GREEN);
         }
     }
+
+    if(lives > 0) {
+        if(draw_pause_btn(pause_texture)) {
+            is_paused = !is_paused;
+        }
+    }
+
+    if(is_paused){
+        pauseOption option = draw_pause_menu(screenwidth, screenheight);
+        if(option == PAUSE_CONTINUE) is_paused = false;
+        else if (option == PAUSE_RESTART){
+            savegame_delete();
+            level = 0;
+            Game_state_reinit(level);
+            is_paused = false;
+        }
+        else if(option == PAUSE_MAINMENU){
+            savegame_write(&ship, bullets, asteroids, max_asteroids, init_asteroids, asteroids_count, total_score, lives, level);
+            current_screen = MENU;
+            is_paused = false;
+            menu_init(screenwidth, screenheight, true);
+        }
+        else if(option == PAUSE_EXIT) {
+            savegame_write(&ship, bullets, asteroids, max_asteroids, init_asteroids, asteroids_count, total_score, lives, level);
+            should_exit = true;
+        }
+    }
+
     EndDrawing();
 }
 
 void Game_update() {
+    if(is_paused) return;
+
     for (int i = 0; i < max_asteroids; i++) {
         if (asteroids[i].state) {
             Asteroid_move(&asteroids[i]);
@@ -409,45 +445,60 @@ void Game_update() {
             ship_reinit_wait_time = 1.0;
         }
     } else {
-        if (!score_recorded) {
-        check_highscores(high_scores, total_score);
-        save_highscores(high_scores);
-        score_recorded = true;
-        savegame_delete();
+        if (!score_recorded  && !is_entering_name) {
+        is_entering_name = highscore_check(high_scores, total_score);
+            if(!is_entering_name){
+                score_recorded = true;
+                savegame_delete();
+            }
         }
 
-        gameOverOption option =
-            draw_gameOver(screenwidth, screenheight, total_score);
-        if (option == PLAY_AGAIN) {
+        if(is_entering_name){
+            bool confirmed = draw_name_entry(screenwidth, screenheight, total_score, name_buffer, NAME_MAX_LEN);
+            if(confirmed){
+                insert_highscore(high_scores, total_score, name_buffer);
+                save_highscores(high_scores);
+                is_entering_name = false;
+                score_recorded = true;
+                savegame_delete();
+                name_buffer[0] = '\0';
+            }
+        }
+        else {
+            gameOverOption option = draw_gameOver(screenwidth, screenheight, total_score);
+            if (option == PLAY_AGAIN) {
             level = 0;
             Game_state_reinit(level);
             score_recorded = false;
-        } else if (option == MAIN_MENU) {
+            } else if (option == MAIN_MENU) {
             level = 0;
             current_screen = MENU;
             Game_state_reinit(level);
             score_recorded = false;
             menu_init(screenwidth, screenheight, savegame_exists());
+            }
         }
+        
     }
 
-    // Bullets
-    Bullet_shoot(bullets, &ship);
-    Bullet_screen_wraparound(bullets, screenwidth + buffer,
-                             screenheight + buffer);
+    if(lives > 0){
+        // Bullets
+        Bullet_shoot(bullets, &ship);
+        Bullet_screen_wraparound(bullets, screenwidth + buffer, screenheight + buffer);
 
-    // Collision detection, and corresponding fragment or destruct effects
-    Bullet_strike_asteroids(bullets, asteroids);
-    bool was_intact = ship.intact;
-    Asteroid_strike_ship(asteroids, &ship);
-    if (was_intact && !ship.intact) {
-        PlaySound(exp_sound);
+        // Collision detection, and corresponding fragment or destruct effects
+        Bullet_strike_asteroids(bullets, asteroids);
+        bool was_intact = ship.intact;
+        Asteroid_strike_ship(asteroids, &ship);
+        if (was_intact && !ship.intact) {
+            PlaySound(exp_sound);
+        }
     }
 }
 
 int main(void) {
     Game_init();
-    while (!WindowShouldClose() || IsKeyPressed(KEY_R)) {
+    while ((!WindowShouldClose() || IsKeyPressed(KEY_R)) && !should_exit) {
         UpdateMusicStream(game_music);
         if ((current_screen == MENU) || (current_screen == SETTINGS) ||
             (current_screen == HIGH_SCORES)) {
@@ -478,6 +529,8 @@ int main(void) {
     UnloadTexture(ship_texture);
     UnloadTexture(thruster_texture);
     UnloadTexture(back_texture);
+    UnloadTexture(pause_texture);
+
     CloseWindow();
     return 0;
 }
