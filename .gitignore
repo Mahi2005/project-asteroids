@@ -25,7 +25,10 @@ main.exe
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
-
+.clang-format
+.clang-format~
+compile_commands.json
+TAGS
 
 # === Operating System Junk ===
 .DS_Store
