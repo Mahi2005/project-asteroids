@@ -11,6 +11,8 @@ main.exe
 *.so
 *.dylib
 *.dll
+*.dat
+*.txt
 
 # Debug symbols
 *.dSYM/
