@@ -1,3 +1,9 @@
+<<<<<<< HEAD
 6100 Fahim
 5900 Fahim
 5500 FAHIM
+=======
+16900
+13400
+12600
+>>>>>>> b737d8f (save local changes)
