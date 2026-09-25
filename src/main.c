@@ -1,5 +1,6 @@
 #include "asteroids.h"
 #include "bullets.h"
+#include "enemy_ship.h"
 #include "menu.h"
 #include "raylib.h"
 #include "raymath.h"
@@ -31,6 +32,8 @@ static const int screenheight = 750.0;
 static game_screen current_screen = MENU;
 
 static Ship_T ship;
+static EnemyShip_T enemy;
+static Texture2D enemy_texture;
 static Texture2D ship_texture;
 static Texture2D thruster_texture;
 static Texture2D back_texture;
@@ -72,6 +75,8 @@ void Game_init() {
     thruster_texture = LoadTexture("assets/ship_thruster.png");
     back_texture = LoadTexture("assets/back_btn.png");
     pause_texture = LoadTexture("assets/pause_btn.png");
+
+    InitEnemyShip(&enemy, "assets/enemy.png", screenwidth, screenheight);
     SetTargetFPS(60);
     // menu initialization
     bool has_saved_game = savegame_exists();
@@ -336,6 +341,7 @@ void Game_draw_frame() {
                 DrawCircleV(bullets[i].position, 4, RED);
             }
         }
+        DrawEnemyShip(enemy);
 
         if (asteroids_count == 0) {
             char level_msg[100];
@@ -405,6 +411,8 @@ void Game_update() {
         //}
     }
     Asteroid_track_count(asteroids);
+
+    UpdateEnemyShip(&enemy, ship.centroid,screenwidth,screenheight);
     // Ship
     if (ship.intact) {
         Ship_move(&ship);
@@ -420,6 +428,8 @@ void Game_update() {
                 level_up = true;
                 level_wait_time = 2.5;
             }
+            if (ship_invuln_time>0)
+            ship_invuln_time-=GetFrameTime();
         }
 
         if (lives == 3) {
@@ -493,6 +503,29 @@ void Game_update() {
         if (was_intact && !ship.intact) {
             PlaySound(exp_sound);
         }
+    // Collision detection, and corresponding fragment or destruct effects
+    Bullet_strike_asteroids(bullets, asteroids);
+
+    for( int i=0; i< MAX_BULLETS ; i++){
+        if(bullets[i].active){
+            if(CheckBulletHitEnemy(bullets[i].position,&enemy)){
+                total_score+=500;
+                bullets[i].active=false ;
+                PlaySound(exp_sound);
+            }
+        }
+    }
+    if(ship.intact && ship_invuln_time<=0){
+        if(CheckEnemyBulletHitPlayer(&enemy, &ship)) {
+            lives--;
+            ship_invuln_flag= true;
+            PlaySound(exp_sound);
+        }
+    }
+    bool was_intact = ship.intact;
+    Asteroid_strike_ship(asteroids, &ship);
+    if (was_intact && !ship.intact) {
+        PlaySound(exp_sound);
     }
 }
 
@@ -531,6 +564,7 @@ int main(void) {
     UnloadTexture(back_texture);
     UnloadTexture(pause_texture);
 
+    UnloadEnemyShip(&enemy);
     CloseWindow();
     return 0;
 }
