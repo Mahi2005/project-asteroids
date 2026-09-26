@@ -7,6 +7,7 @@
 #include "raymath.h"
 #include "savegame.h"
 #include "ship.h"
+#include "settings.h"
 #include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -17,6 +18,7 @@
 #define DEBUG 1
 #define INIT_ASTEROIDS 6
 #define MAX_ASTEROIDS INIT_ASTEROIDS * 4
+#define MAX_ENEMIES 20
 
 int lives = 3;
 int max_asteroids = MAX_ASTEROIDS;
@@ -32,7 +34,6 @@ static const int screenheight = 750.0;
 static game_screen current_screen = MENU;
 
 static Ship_T ship;
-static EnemyShip_T enemy;
 static Texture2D enemy_texture;
 static Texture2D ship_texture;
 static Texture2D thruster_texture;
@@ -46,6 +47,9 @@ Sound exp_sound;
 // static Ship_T ship_cpy;
 static Bullet_T bullets[MAX_BULLETS];
 static Asteroid_T *asteroids;
+
+static EnemyShip_T enemies[MAX_ENEMIES];
+static int enemy_slot_count = 1;
 
 static HighScore_T high_scores[NUM_OF_SCORES];
 static bool is_entering_name = false;
@@ -62,6 +66,15 @@ static float ship_reinit_wait_time = 1.0;
 float ship_invuln_time = 3.0;
 bool ship_invuln_flag = true;
 
+static void init_enemies_for_level(int level) {
+    DifficultyPar_T parameter = settings_get_difficulty_parameters();
+    enemy_slot_count = settings_get_enemy_count(level);
+    if (enemy_slot_count > MAX_ENEMIES) enemy_slot_count = MAX_ENEMIES;
+    for(int i = 0; i < enemy_slot_count; i++) {
+        ResetEnemyShip(&enemies[i], enemy_texture, screenwidth,screenheight, -(float)i * parameter.enemy_spawn_interval);
+    }
+}
+
 void Game_init() {
     SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
 
@@ -76,7 +89,10 @@ void Game_init() {
     back_texture = LoadTexture("assets/back_btn.png");
     pause_texture = LoadTexture("assets/pause_btn.png");
 
-    InitEnemyShip(&enemy, "assets/enemy.png", screenwidth, screenheight);
+
+    enemy_texture = LoadTexture("assets/enemy.png");
+    settings_load();
+    init_enemies_for_level(0);
     SetTargetFPS(60);
     // menu initialization
     bool has_saved_game = savegame_exists();
@@ -128,19 +144,26 @@ void Game_state_reinit(int level) {
     int asteroids_increment = 0;
     float velocity_multiplier = 1;
 
-    switch (level) {
-    case 0:
-        asteroids_increment = 0;
-        velocity_multiplier = 1;
-        break;
-    case 1:
-        asteroids_increment = 5;
-        velocity_multiplier = 1.3;
-        break;
-    default:
-        asteroids_increment = 5;
-        velocity_multiplier = 1.3;
+    // switch (level) {
+    // case 0:
+    //     asteroids_increment = 0;
+    //     velocity_multiplier = 1;
+    //     break;
+    // case 1:
+    //     asteroids_increment = 5;
+    //     velocity_multiplier = 1.3;
+    //     break;
+    // default:
+    //     asteroids_increment = 5;
+    //     velocity_multiplier = 1.3;
+    // }
+
+    if(level > 0) {
+        DifficultyPar_T parameters = settings_get_difficulty_parameters();
+        asteroids_increment = parameters.asteroid_increment;
+        velocity_multiplier = parameters.asteroid_velocity_multiplier;
     }
+
     init_asteroids += asteroids_increment;
     max_asteroids = init_asteroids * 4;
 
@@ -153,6 +176,9 @@ void Game_state_reinit(int level) {
     // asteroids_2 = realloc(asteroids_2, sizeof(Asteroid_T) * max_asteroids);
 
     Ship_init(&ship);
+
+    init_enemies_for_level(level);
+
     // Ship_init(&ship_cpy);
 
     SetRandomSeed(time(0));
@@ -174,6 +200,7 @@ void Game_draw_menu() {
         ClearBackground(BLACK);
 
         int choice = update_menu(screenwidth, screenheight);
+        draw_credits_button();
 
         if (choice == BUTTON_CONTINUE) {
             savegame_load(&ship, bullets, &asteroids, &max_asteroids,
@@ -192,25 +219,39 @@ void Game_draw_menu() {
             current_screen = SETTINGS;
         } else if (choice == BUTTON_HIGHSCORES) {
             current_screen = HIGH_SCORES;
+        } else if (choice == BUTTON_TUTORIAL){
+            current_screen = TUTORIAL;
         } else if (choice == BUTTON_EXIT) {
             exit(EXIT_SUCCESS);
         }
+        
+        if(is_credits_button_clicked()) current_screen = CREDITS;
+
     } else if (current_screen == SETTINGS) {
 
         ClearBackground(BLACK);
-        bool back = menu_draw_todo_screen("SETTINGS");
-        if (back)
+        bool back = draw_settings_menu(screenwidth, screenheight, back_texture);
+        if (back){
+            settings_save();
             current_screen = MENU;
-        // continue;
+        }
     } else if (current_screen == HIGH_SCORES) {
 
         ClearBackground(BLACK);
-        bool back = menu_draw_highscores(screenwidth, screenheight, high_scores,
-                                         NUM_OF_SCORES, back_texture);
+        bool back = menu_draw_highscores(screenwidth, screenheight, high_scores, NUM_OF_SCORES, back_texture);
 
-        if (back)
-            current_screen = MENU;
-        // continue;
+        if (back) current_screen = MENU;
+
+    } else if (current_screen == TUTORIAL) {
+        ClearBackground(BLACK);
+        bool back = draw_tutorial_screen(screenwidth, screenheight, back_texture);
+        if(back) current_screen = MENU;
+
+    } else if (current_screen == CREDITS) {
+        ClearBackground(BLACK);
+        bool back = draw_credits_screen(screenwidth, screenheight);
+        if (back) current_screen = MENU;
+
     } else if (current_screen == PLAY) {
         EndDrawing();
         return;
@@ -344,7 +385,9 @@ void Game_draw_frame() {
                 DrawCircleV(bullets[i].position, 4, RED);
             }
         }
-        DrawEnemyShip(enemy);
+        for (int i = 0; i < enemy_slot_count; i++) {
+            DrawEnemyShip(enemies[i]);
+        }
 
         if (asteroids_count == 0) {
             char level_msg[100];
@@ -419,7 +462,11 @@ void Game_update() {
     }
     Asteroid_track_count(asteroids);
 
-    UpdateEnemyShip(&enemy, ship.centroid, screenwidth, screenheight);
+    DifficultyPar_T diff_par = settings_get_difficulty_parameters();
+    for(int i = 0; i < enemy_slot_count; i++){
+        UpdateEnemyShip(&enemies[i], ship.centroid, screenwidth, screenheight, diff_par.enemy_spawn_interval);
+    }
+
     // Ship
     if (ship.intact) {
         Ship_move(&ship);
@@ -471,8 +518,7 @@ void Game_update() {
         }
 
         if (is_entering_name) {
-            bool confirmed =
-                draw_name_entry(screenwidth, screenheight, total_score,
+            bool confirmed = draw_name_entry(screenwidth, screenheight, total_score,
                                 name_buffer, NAME_MAX_LEN);
             if (confirmed) {
                 insert_highscore(high_scores, total_score, name_buffer);
@@ -517,18 +563,24 @@ void Game_update() {
 
         for (int i = 0; i < MAX_BULLETS; i++) {
             if (bullets[i].active) {
-                if (CheckBulletHitEnemy(bullets[i].position, &enemy)) {
-                    total_score += 500;
-                    bullets[i].active = false;
-                    PlaySound(exp_sound);
+                for(int y = 0; y < enemy_slot_count; y++){
+                    if (CheckBulletHitEnemy(bullets[i].position, &enemies[y])) {
+                        total_score += 500;
+                        bullets[i].active = false;
+                        PlaySound(exp_sound);
+                        break;
+                    }
                 }
             }
         }
         if (ship.intact && ship_invuln_time <= 0) {
-            if (CheckEnemyBulletHitPlayer(&enemy, &ship)) {
-                lives--;
-                ship_invuln_flag = true;
-                PlaySound(exp_sound);
+            for(int y = 0; y < enemy_slot_count; y++) {
+                if (CheckEnemyBulletHitPlayer(&enemies[y], &ship)) {
+                    lives--;
+                    ship_invuln_flag = true;
+                    PlaySound(exp_sound);
+                    break;
+                }
             }
         }
         was_intact = ship.intact;
@@ -543,8 +595,12 @@ int main(void) {
     Game_init();
     while ((!WindowShouldClose() || IsKeyPressed(KEY_R)) && !should_exit) {
         UpdateMusicStream(game_music);
-        if ((current_screen == MENU) || (current_screen == SETTINGS) ||
-            (current_screen == HIGH_SCORES)) {
+        float actual_music_vol = settings.muted ? 0.0 : settings.music_volume;
+        float actual_sound_vol = settings.muted ? 0.0 : settings.sound_volume;
+        SetMusicVolume(game_music, actual_music_vol);
+        SetSoundVolume(shoot_sound, actual_sound_vol);
+        SetSoundVolume(exp_sound, actual_sound_vol);
+        if ((current_screen == MENU) || (current_screen == SETTINGS) || (current_screen == HIGH_SCORES) || (current_screen == TUTORIAL) || (current_screen == CREDITS)) {
             Game_draw_menu();
         } else if (current_screen == PLAY) {
             if (level_up) {
@@ -560,8 +616,6 @@ int main(void) {
     if (current_screen == PLAY && lives > 0) {
         savegame_write(&ship, bullets, asteroids, max_asteroids, init_asteroids,
                        asteroids_count, total_score, lives, level);
-    } else {
-        savegame_delete();
     }
 
     UnloadSound(shoot_sound);
@@ -574,7 +628,7 @@ int main(void) {
     UnloadTexture(back_texture);
     UnloadTexture(pause_texture);
 
-    UnloadEnemyShip(&enemy);
+    UnloadTexture(enemy_texture);
     CloseWindow();
     return 0;
 }

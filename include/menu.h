@@ -3,12 +3,15 @@
 #include "raylib.h"
 #include <stdbool.h>
 #include "highscores.h"
+#include "settings.h"
 
 typedef enum {
     MENU,
     PLAY,
     SETTINGS,
-    HIGH_SCORES
+    HIGH_SCORES,
+    TUTORIAL,
+    CREDITS
 } game_screen;
 
 typedef enum {
@@ -17,6 +20,8 @@ typedef enum {
     BUTTON_PLAY,
     BUTTON_SETTINGS,
     BUTTON_HIGHSCORES,
+    BUTTON_TUTORIAL,
+    BUTTON_CREDITS,
     BUTTON_EXIT
 } button;
 
@@ -42,5 +47,10 @@ bool menu_draw_highscores(int screenwidth, int screenheight, HighScore_T scores[
 bool draw_name_entry(int screenwidth, int screenheight, int score, char *name_buffer, int max_len);
 bool draw_pause_btn(Texture2D pause_texture);
 pauseOption draw_pause_menu(int screenwidth, int screenheight);
+bool draw_settings_menu(int screenwidth, int screenheight, Texture2D back_texture);
+bool draw_tutorial_screen(int screenwidth, int screenheight, Texture2D back_texture);
+void draw_credits_button(void);
+bool is_credits_button_clicked(void);
+bool draw_credits_screen(int screenwidth, int screenheight);
 
 #endif

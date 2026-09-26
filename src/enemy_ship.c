@@ -16,13 +16,26 @@ void InitEnemyShip(EnemyShip_T *enemy, const char *texturePath, int screenWidth,
     }
 }
 
-void UpdateEnemyShip(EnemyShip_T *enemy, Vector2 playerPos, int screenWidth, int screenHeight) {
-    float deltaTime = GetFrameTime();
+void ResetEnemyShip(EnemyShip_T *enemy, Texture2D texture, int screenWidth, int screenHeight, float initial_spawn_timer){
+    enemy->position = (Vector2){ GetRandomValue(0, screenWidth), GetRandomValue(50, screenHeight / 4) };
+    enemy->speed = (Vector2){ (float)GetRandomValue(-150, 150), 0 };
+    enemy->radius = 35.0f;
+    enemy->active = false;
+    enemy->shootTimer = 0.0f;
+    enemy->spawnTimer = initial_spawn_timer;
+    enemy->texture = texture;
 
+    for (int i = 0; i < MAX_ENEMY_BULLETS; i++) {
+        enemy->bullets[i].active = false;
+    }
+}
+
+void UpdateEnemyShip(EnemyShip_T *enemy, Vector2 playerPos, int screenWidth, int screenHeight, float spawn_interval) {
+    float deltaTime = GetFrameTime();
    
     if (!enemy->active) {
         enemy->spawnTimer += deltaTime;
-        if (enemy->spawnTimer >= 10.0f) {
+        if (enemy->spawnTimer >= spawn_interval) {
             enemy->active = true;
             enemy->spawnTimer = 0.0f;
             enemy->position = (Vector2){ GetRandomValue(0, screenWidth), GetRandomValue(50, screenHeight / 4) };

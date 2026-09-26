@@ -24,11 +24,13 @@ typedef struct {
 void InitEnemyShip(EnemyShip_T *enemy, const char *texturePath, int screenWidth,
                    int screenHeight);
 void UpdateEnemyShip(EnemyShip_T *enemy, Vector2 playerPos, int screenWidth,
-                     int screenHeight);
+                     int screenHeight, float spawn_interval);
 void DrawEnemyShip(EnemyShip_T enemy);
 void UnloadEnemyShip(EnemyShip_T *enemy);
 
 bool CheckBulletHitEnemy(Vector2 bulletPos, EnemyShip_T *enemy);
 bool CheckEnemyBulletHitPlayer(EnemyShip_T *enemy, Ship_T *ship);
+
+void ResetEnemyShip(EnemyShip_T *enemy, Texture2D texture, int screenWidth, int screenHeight, float initial_spawn_timer);
 
 #endif
