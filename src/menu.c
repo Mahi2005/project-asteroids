@@ -33,7 +33,7 @@ void draw_button(Rectangle rectangle, const char *label, bool is_selected) {
 
     Vector2 mouse = GetMousePosition();
     bool hovered = CheckCollisionPointRec(mouse, rectangle) || is_selected;
-    Color button_color = hovered ? YELLOW : WHITE;
+    Color button_color = hovered ? YELLOW : BLACK;
     DrawRectangleLinesEx(rectangle, 2, button_color);
 
     int font_size = 20;
@@ -500,18 +500,21 @@ bool draw_credits_screen(int screenwidth, int screenheight){
         "",
         "",
         "SABER HOSSAIN ABIR",
+        "ROLL : 2505109",
         "Initial ship moving code",
         "Bullets",
         "Sound effects & music",
         "Enemy ship",
         "",
         "S.M. TAZRIAN REZA MAHI",
+         "ROLL : 2505108",
         "Asteroids shape generation & fragmentation",
         "Ship and asteroids screen wraparound, collision detection",
         "Scoring system and lives",
         "Leveling system",
         "",
         "SHAJIDUL ISLAM FAHIM",
+         "ROLL : 2505118",
         "Ship texture and thruster effect",
         "Menu system and settings",
         "High score storage and management",
@@ -529,7 +532,7 @@ bool draw_credits_screen(int screenwidth, int screenheight){
     float y = screenheight + credits_scroll_y;
 
     for(int i = 0; i < line_count; i++){
-        bool is_name = (i == 3 || i == 9 || i == 15);
+        bool is_name = (i == 3 || i == 10 || i == 17);
         Color color;
         if(i == 0) {
             text_size = 44;

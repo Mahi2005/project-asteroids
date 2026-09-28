@@ -4,10 +4,7 @@
 #include "asteroids.h"
 
 void Ship_reposition(Ship_T *ship, Vector2 displacement, float angle) {
-  // orients the ship's top, left and right vertices after updating its centroid
-  // i.e position by translation or rotation
-  // direction of ship is determined by direction of its top vertex w.r.t its
-  // centroid
+  
   ship->centroid = Vector2Add(ship->centroid, displacement);
   ship->top = Vector2Add(ship->top, displacement);
   ship->top = Vector2RotateAround(ship->top, angle, ship->centroid);
@@ -126,12 +123,57 @@ void Ship_screen_wraparound(Ship_T *ship, int screen_w, int screen_h) {
         break;
     }
 }
-
-void Ship_destroy(Ship_T *ship) {
-  // TODO: Implement ship destruction effects here
-  // Main idea is to detach the lines of the ship and show them being rotated or
-  // displaced in random directions.
+void Ship_destroy(Ship_T *ship, Explosion_T *explosion) {
   ship->intact = false;
+  if (explosion != NULL) {
+      explosion->position = ship->centroid;
+      explosion->current_frame = 0;
+      explosion->frame_timer = 0.0f;
+      explosion->frame_duration = 0.05f; 
+      explosion->total_frames = EXPLOSION_FRAMES;// Frame timing duration
+      explosion->active = true;
+  }
 }
+
+void Explosion_update(Explosion_T *explosion, float dt) {
+    if (!explosion || !explosion->active) return;
+
+    explosion->frame_timer += dt;
+    if (explosion->frame_timer >= explosion->frame_duration) {
+        explosion->frame_timer = 0.0f;
+        explosion->current_frame++;
+        if (explosion->current_frame >= EXPLOSION_FRAMES) {
+            explosion->active = false;
+        }
+    }
+}
+
+void Explosion_draw(const Explosion_T *explosion, Texture2D explosion_texture) {
+    if (!explosion || !explosion->active) return;
+
+    float frame_width = (float)explosion_texture.width / explosion->total_frames;
+    float frame_height = (float)explosion_texture.height;
+
+    Rectangle source_rect = {
+        explosion->current_frame * frame_width,
+        0,
+        frame_width,
+        frame_height
+    };
+
+    Rectangle dest_rect = {
+        explosion->position.x,
+        explosion->position.y,
+        frame_width * 1.5f,
+        frame_height * 1.5f
+    };
+
+    Vector2 origin = { (frame_width * 1.5f) / 2.0f, (frame_height * 1.5f) / 2.0f };
+
+    DrawTexturePro(explosion_texture, source_rect, dest_rect, origin, 0.0f, WHITE);
+}
+
+ 
+
 
 

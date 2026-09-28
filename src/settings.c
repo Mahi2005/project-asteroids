@@ -37,16 +37,16 @@ DifficultyPar_T settings_get_difficulty_parameters(void){
     switch ( (settings.difficulty))
     {
     case DIF_EASY:
-        p = (DifficultyPar_T){1, 1, 20.0, 5, 1.3};
+        p = (DifficultyPar_T){1, 1, 25.0, 5, 1.3};
         break;
     case DIF_MEDIUM:
-        p = (DifficultyPar_T){2, 2, 10.0, 8, 1.6};
+        p = (DifficultyPar_T){2, 2, 20.0, 8, 1.6};
         break;
     case DIF_HARD:
-        p = (DifficultyPar_T){2, 3, 10.0, 10, 1.9};
+        p = (DifficultyPar_T){2, 3, 15.0, 10, 1.9};
         break;
     default:
-        p = (DifficultyPar_T){1, 1, 20.0, 5, 1.3};
+        p = (DifficultyPar_T){1, 1, 30.0, 5, 1.3};
         break;
     }
     return p;

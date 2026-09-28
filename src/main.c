@@ -15,7 +15,7 @@
 #include <string.h>
 #include <time.h>
 
-#define DEBUG 1
+#define DEBUG 0
 #define INIT_ASTEROIDS 6
 #define MAX_ASTEROIDS INIT_ASTEROIDS * 4
 #define MAX_ENEMIES 20
@@ -39,6 +39,8 @@ static Texture2D ship_texture;
 static Texture2D thruster_texture;
 static Texture2D back_texture;
 static Texture2D pause_texture;
+static Texture2D explosion_texture;
+static Texture2D background;
 // Global sound and music variables
 static Music menu_music;
 static Music game_music;
@@ -66,6 +68,8 @@ static float ship_reinit_wait_time = 1.0;
 float ship_invuln_time = 3.0;
 bool ship_invuln_flag = true;
 
+static Explosion_T ship_explosion = {0};
+
 static void init_enemies_for_level(int level) {
     DifficultyPar_T parameter = settings_get_difficulty_parameters();
     enemy_slot_count = settings_get_enemy_count(level);
@@ -88,6 +92,9 @@ void Game_init() {
     thruster_texture = LoadTexture("assets/ship_thruster.png");
     back_texture = LoadTexture("assets/back_btn.png");
     pause_texture = LoadTexture("assets/pause_btn.png");
+    explosion_texture = LoadTexture("assets/ship_explosion.jpg");
+    background = LoadTexture("assets/background.png");
+     //Ship_init_assets(&explosion_texture);
 
 
     enemy_texture = LoadTexture("assets/enemy.png");
@@ -198,6 +205,9 @@ void Game_draw_menu() {
     BeginDrawing();
     if (current_screen == MENU) {
         ClearBackground(BLACK);
+        Rectangle background_source = {0,0,background.width, background.height};
+        Rectangle background_target = {0,0,screenwidth, screenheight};
+        DrawTexturePro(background, background_source, background_target, (Vector2){0,0}, 0, WHITE);
 
         int choice = update_menu(screenwidth, screenheight);
         draw_credits_button();
@@ -398,6 +408,8 @@ void Game_draw_frame() {
         }
     }
 
+    Explosion_draw(&ship_explosion, explosion_texture);
+
     if (lives > 0) {
         if (draw_pause_btn(pause_texture)) {
             is_paused = !is_paused;
@@ -434,6 +446,7 @@ void Game_draw_frame() {
 void Game_update() {
     if (is_paused)
         return;
+        Explosion_update(&ship_explosion, GetFrameTime());
 
     for (int i = 0; i < max_asteroids; i++) {
         if (asteroids[i].state) {
@@ -556,7 +569,9 @@ void Game_update() {
         bool was_intact = ship.intact;
         Asteroid_strike_ship(asteroids, &ship);
         if (was_intact && !ship.intact) {
+
             PlaySound(exp_sound);
+            Ship_destroy(&ship, &ship_explosion);
         }
         // Collision detection, and corresponding fragment or destruct effects
         Bullet_strike_asteroids(bullets, asteroids);
@@ -579,14 +594,16 @@ void Game_update() {
                     lives--;
                     ship_invuln_flag = true;
                     PlaySound(exp_sound);
+                    Ship_destroy(&ship, &ship_explosion);
                     break;
                 }
             }
         }
-        was_intact = ship.intact;
+       was_intact = ship.intact;
         Asteroid_strike_ship(asteroids, &ship);
         if (was_intact && !ship.intact) {
             PlaySound(exp_sound);
+            Ship_destroy(&ship, &ship_explosion);
         }
     }
 }
@@ -629,6 +646,8 @@ int main(void) {
     UnloadTexture(pause_texture);
 
     UnloadTexture(enemy_texture);
+    UnloadTexture(explosion_texture);
+    UnloadTexture(background);
     CloseWindow();
     return 0;
 }

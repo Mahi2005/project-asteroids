@@ -3,8 +3,21 @@
 
 #include "raylib.h"
 
+#define EXPLOSION_FRAMES 8
+
 extern int lives;
 extern int level;
+
+typedef struct {
+    Vector2 position;
+    int current_frame;
+    float frame_timer;
+    float frame_duration;
+    int total_frames;       
+    int frame_width;        
+    int frame_height;
+    bool active;
+} Explosion_T;
 
 typedef struct {
     Vector2 centroid;
@@ -33,5 +46,10 @@ int Ship_is_fully_crossed(Ship_T* ship);
 void Ship_init(Ship_T* ship);
 void Ship_move(Ship_T* ship);
 void Ship_screen_wraparound(Ship_T *ship, int screen_w, int screen_h);
-void Ship_destroy(Ship_T *ship);
+void Ship_destroy(Ship_T *ship, Explosion_T *explosion);
+
+
+void Explosion_update(Explosion_T *explosion, float delta_time);
+void Explosion_draw(const Explosion_T *explosion, Texture2D texture);
+
 #endif
