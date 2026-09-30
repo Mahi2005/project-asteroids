@@ -21,6 +21,7 @@ void ResetEnemyShip(EnemyShip_T *enemy, Texture2D texture, int screenWidth, int 
     enemy->speed = (Vector2){ (float)GetRandomValue(-150, 150), 0 };
     enemy->radius = 35.0f;
     enemy->active = false;
+    enemy->depleted = false;
     enemy->shootTimer = 0.0f;
     enemy->spawnTimer = initial_spawn_timer;
     enemy->texture = texture;
@@ -31,6 +32,7 @@ void ResetEnemyShip(EnemyShip_T *enemy, Texture2D texture, int screenWidth, int 
 }
 
 void UpdateEnemyShip(EnemyShip_T *enemy, Vector2 playerPos, int screenWidth, int screenHeight, float spawn_interval) {
+    if (enemy->depleted) return;
     float deltaTime = GetFrameTime();
    
     if (!enemy->active) {
@@ -114,6 +116,7 @@ bool CheckBulletHitEnemy(Vector2 bulletPos, EnemyShip_T *enemy) {
 
     if (CheckCollisionCircles(bulletPos, 3.0f, enemy->position, enemy->radius)) {
         enemy->active = false;
+        enemy->depleted = true;
         return true;
     }
     return false;
