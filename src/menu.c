@@ -3,6 +3,10 @@
 #include "menu.h"
 #define MAX_MENU_BUTTONS 6
 
+extern bool is_paused;
+extern game_screen current_screen;
+extern bool is_gameover;
+
 int menu_starting_y = 0;
 Rectangle menu_buttons[MAX_MENU_BUTTONS];
 button menu_button_ids[MAX_MENU_BUTTONS];
@@ -33,13 +37,18 @@ void draw_button(Rectangle rectangle, const char *label, bool is_selected) {
 
     Vector2 mouse = GetMousePosition();
     bool hovered = CheckCollisionPointRec(mouse, rectangle) || is_selected;
-    Color button_color = hovered ? YELLOW : BLACK;
-    DrawRectangleLinesEx(rectangle, 2, button_color);
+    Color button_color;
+    if (is_paused || is_gameover) {
+        button_color = hovered ? YELLOW : BLUE;
+    } else {
+        button_color = hovered ? YELLOW : BLACK;
+    }
+    DrawRectangleRec(rectangle, button_color);
 
     int font_size = 20;
     int text_width = MeasureText(label, font_size);
 
-    DrawText(label, rectangle.x + rectangle.width / 2 - text_width / 2, rectangle.y + rectangle.height / 2 - font_size / 2, font_size, button_color);
+    DrawText(label, rectangle.x + rectangle.width / 2 - text_width / 2, rectangle.y + rectangle.height / 2 - font_size / 2, font_size, WHITE);
 }
 
 void menu_init(int screenwidth, int screenheight, bool has_saved_game) {
@@ -161,6 +170,7 @@ bool menu_draw_todo_screen(const char *title) {
 }
 
 gameOverOption draw_gameOver(int screenwidth, int screenheight, int score) {
+    is_gameover = true;
     DrawRectangle(0, 0, screenwidth, screenheight,(Color){0, 0, 0, 160});
 
     const char *game_over = "GAME OVER";
@@ -205,9 +215,41 @@ gameOverOption draw_gameOver(int screenwidth, int screenheight, int score) {
     // }
 
 
-    // if (buttonClicked(gameover_buttons[1])) {
+    //if (buttonClicked(gameover_buttons[1])) {
     //     return MAIN_MENU;
-    // }
+    //}
+
+    if (buttonClicked(gameover_buttons[0], false)) {
+        return PLAY_AGAIN;
+    }
+
+    if (buttonClicked(gameover_buttons[1], false)) {
+        return MAIN_MENU;
+    }
+
+    return GAMEOVER;
+}
+
+gameOverOption gameover_menu_selected_button(int screenwidth, int screenheight) {
+    int button_width = 220;
+    int button_height = 50;
+    int gap = 20;
+    int start_y = screenheight / 2 + 200;
+
+    gameover_buttons[0] = (Rectangle){
+        .x = screenwidth / 2.0 - button_width / 2.0,
+        .y = start_y,
+        .width = button_width,
+        .height = button_height
+    };
+
+    gameover_buttons[1] = (Rectangle){
+        .x = screenwidth / 2.0 - button_width / 2.0,
+        .y = start_y + button_height + gap,
+        .width = button_width,
+        .height = button_height
+    };
+
     if (buttonClicked(gameover_buttons[0], false)) {
         return PLAY_AGAIN;
     }

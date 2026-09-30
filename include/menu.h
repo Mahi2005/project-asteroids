@@ -11,7 +11,8 @@ typedef enum {
     SETTINGS,
     HIGH_SCORES,
     TUTORIAL,
-    CREDITS
+    CREDITS,
+    GAME_OVER
 } game_screen;
 
 typedef enum {
@@ -52,5 +53,5 @@ bool draw_tutorial_screen(int screenwidth, int screenheight, Texture2D back_text
 void draw_credits_button(void);
 bool is_credits_button_clicked(void);
 bool draw_credits_screen(int screenwidth, int screenheight);
-
+gameOverOption gameover_menu_selected_button(int screenwidth, int screenheight);
 #endif

@@ -38,7 +38,7 @@ void UpdateEnemyShip(EnemyShip_T *enemy, Vector2 playerPos, int screenWidth, int
         if (enemy->spawnTimer >= spawn_interval) {
             enemy->active = true;
             enemy->spawnTimer = 0.0f;
-            enemy->position = (Vector2){ GetRandomValue(0, screenWidth), GetRandomValue(50, screenHeight / 4) };
+            enemy->position = (Vector2){ GetRandomValue(0, screenWidth), GetRandomValue(50, screenHeight) };
             enemy->speed = (Vector2){ (float)GetRandomValue(-150, 150), 0 };
         }
         

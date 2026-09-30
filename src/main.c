@@ -31,7 +31,7 @@ int buffer = 200;
 static const int screenwidth = 1300.0;
 static const int screenheight = 750.0;
 
-static game_screen current_screen = MENU;
+game_screen current_screen = MENU;
 
 static Ship_T ship;
 static Texture2D enemy_texture;
@@ -41,6 +41,7 @@ static Texture2D back_texture;
 static Texture2D pause_texture;
 static Texture2D explosion_texture;
 static Texture2D background;
+static Texture2D game_background;
 // Global sound and music variables
 static Music menu_music;
 static Music game_music;
@@ -57,7 +58,8 @@ static HighScore_T high_scores[NUM_OF_SCORES];
 static bool is_entering_name = false;
 static char name_buffer[NAME_MAX_LEN] = "";
 static bool score_recorded = false;
-static bool is_paused = false;
+bool is_paused = false;
+bool is_gameover = false;
 static bool should_exit = false;
 
 // static Asteroid_T* asteroids_2;
@@ -67,7 +69,7 @@ static float level_wait_time = 2.5;
 static float ship_reinit_wait_time = 1.0;
 float ship_invuln_time = 3.0;
 bool ship_invuln_flag = true;
-
+bool game_background_loaded = true;
 static Explosion_T ship_explosion = {0};
 
 static void init_enemies_for_level(int level) {
@@ -92,8 +94,9 @@ void Game_init() {
     thruster_texture = LoadTexture("assets/ship_thruster.png");
     back_texture = LoadTexture("assets/back_btn.png");
     pause_texture = LoadTexture("assets/pause_btn.png");
-    explosion_texture = LoadTexture("assets/ship_explosion.jpg");
+    explosion_texture = LoadTexture("assets/ship_explosion_clear_crop.png");
     background = LoadTexture("assets/background.png");
+    game_background = LoadTexture("assets/game_background.png");
      //Ship_init_assets(&explosion_texture);
 
 
@@ -140,6 +143,11 @@ void Game_state_reinit(int level) {
 
     // asteroids = NULL;
     // asteroids_2 = NULL;
+    is_gameover = false;
+    if (!game_background_loaded) {
+        game_background = LoadTexture("assets/game_background.png");
+        game_background_loaded = true;  
+    }
 
     if (level == 0) {
         lives = 3;
@@ -200,6 +208,11 @@ void Game_state_reinit(int level) {
             Vector2Scale(asteroids[i].velocity, velocity_multiplier);
     }
 }
+void game_background_draw(void){
+    Rectangle game_background_source = {0,0,game_background.width, game_background.height};
+        Rectangle game_background_target = {0,0,screenwidth, screenheight};
+        DrawTexturePro(game_background, game_background_source, game_background_target, (Vector2){0,0}, 0, WHITE);
+}
 
 void Game_draw_menu() {
     BeginDrawing();
@@ -207,23 +220,27 @@ void Game_draw_menu() {
         ClearBackground(BLACK);
         Rectangle background_source = {0,0,background.width, background.height};
         Rectangle background_target = {0,0,screenwidth, screenheight};
+        
         DrawTexturePro(background, background_source, background_target, (Vector2){0,0}, 0, WHITE);
 
         int choice = update_menu(screenwidth, screenheight);
         draw_credits_button();
 
         if (choice == BUTTON_CONTINUE) {
+            // game_background_draw();
             savegame_load(&ship, bullets, &asteroids, &max_asteroids,
                           &init_asteroids, &asteroids_count, &total_score,
                           &lives, &level);
             current_screen = PLAY;
         } else if (choice == BUTTON_NEWGAME) {
+            // game_background_draw();
             savegame_delete();
             level = 0;
             Game_state_reinit(level);
             current_screen = PLAY;
             menu_init(screenwidth, screenheight, false);
         } else if (choice == BUTTON_PLAY) {
+             // game_background_draw();
             current_screen = PLAY;
         } else if (choice == BUTTON_SETTINGS) {
             current_screen = SETTINGS;
@@ -277,6 +294,8 @@ void Game_draw_frame() {
     char debug_info[1000];
     BeginDrawing();
     ClearBackground(BLACK);
+    if (game_background_loaded) game_background_draw();
+    //ClearBackground(BLACK);
     /* if (current_screen == MENU) { */
     /*     Game_draw_menu(); */
     /* } */
@@ -299,7 +318,7 @@ void Game_draw_frame() {
     // draw_lives
     char str_lives[4];
     strcpy(str_lives, (lives == 3)
-                          ? "AAA"
+                          ? "A A A"
                           : ((lives == 2) ? "AA" : ((lives == 1) ? "A" : "")));
     DrawText(str_lives, 100, 10, 30, RED);
 
@@ -408,12 +427,19 @@ void Game_draw_frame() {
         }
     }
 
-    Explosion_draw(&ship_explosion, explosion_texture);
+    Explosion_draw(&ship_explosion, &ship, explosion_texture);
 
     if (lives > 0) {
         if (draw_pause_btn(pause_texture)) {
             is_paused = !is_paused;
         }
+        // game_background_draw();
+    } else {
+       // if (game_background_loaded) {
+       //     UnloadTexture(game_background);
+       //     game_background_loaded = false;
+        
+        draw_gameOver(screenwidth, screenheight, total_score);
     }
 
     if (is_paused) {
@@ -544,6 +570,7 @@ void Game_update() {
         } else {
             gameOverOption option =
                 draw_gameOver(screenwidth, screenheight, total_score);
+            // gameOverOption option = gameover_menu_selected_button(screenwidth, screenheight);
             if (option == PLAY_AGAIN) {
                 level = 0;
                 Game_state_reinit(level);
@@ -612,8 +639,12 @@ int main(void) {
     Game_init();
     while ((!WindowShouldClose() || IsKeyPressed(KEY_R)) && !should_exit) {
         UpdateMusicStream(game_music);
+        if (IsKeyPressed(KEY_M)) {
+            settings.muted = !settings.muted;
+        }
         float actual_music_vol = settings.muted ? 0.0 : settings.music_volume;
         float actual_sound_vol = settings.muted ? 0.0 : settings.sound_volume;
+        
         SetMusicVolume(game_music, actual_music_vol);
         SetSoundVolume(shoot_sound, actual_sound_vol);
         SetSoundVolume(exp_sound, actual_sound_vol);
@@ -648,6 +679,7 @@ int main(void) {
     UnloadTexture(enemy_texture);
     UnloadTexture(explosion_texture);
     UnloadTexture(background);
+    UnloadTexture(game_background);
     CloseWindow();
     return 0;
 }

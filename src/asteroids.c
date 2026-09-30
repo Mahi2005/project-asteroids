@@ -146,16 +146,17 @@ void Asteroid_draw(Asteroid_T *a, Color color) {
     char debug[1024];
     int pos_y_n_max = (NVERTICES - 2) / 2;
     int neg_y_n_max = (NVERTICES % 2 == 0) ? NVERTICES / 2 : NVERTICES / 2 + 1;
-    DrawLineV(a->vertices[0], a->vertices[1], color);
-    DrawLineV(a->vertices[0], a->vertices[pos_y_n_max + 1], color);
+    float thick = 4.0;
+    DrawLineEx(a->vertices[0], a->vertices[1], thick, color);
+    DrawLineEx(a->vertices[0], a->vertices[pos_y_n_max + 1], thick, color);
     for (int i = 1; i < pos_y_n_max; i++) {
-        DrawLineV(a->vertices[i], a->vertices[i + 1], color);
+        DrawLineEx(a->vertices[i], a->vertices[i + 1], thick, color);
     }
     for (int i = pos_y_n_max + 1; i <= NVERTICES - 2; i++) {
-        DrawLineV(a->vertices[i], a->vertices[i + 1], color);
+        DrawLineEx(a->vertices[i], a->vertices[i + 1], thick, color);
     }
-    DrawLineV(a->vertices[pos_y_n_max], a->vertices[NVERTICES - 1], color);
-    DrawLineV(a->vertices[NVERTICES - 2], a->vertices[NVERTICES - 1], color);
+    DrawLineEx(a->vertices[pos_y_n_max], a->vertices[NVERTICES - 1], thick, color);
+    DrawLineEx(a->vertices[NVERTICES - 2], a->vertices[NVERTICES - 1], thick, color);
     if (DEBUG)
         DrawCircleLinesV(a->position, a->radius, YELLOW);
     if (DEBUG) {

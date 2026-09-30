@@ -36,9 +36,9 @@ int Ship_is_fully_crossed(Ship_T* ship) {
 
 void Ship_init(Ship_T *ship) {
     float ship_length = 20;
-    float rotation = (1 / 10.0) * (PI / 6);
+    float rotation = (1 / 5.0) * (PI / 6);
     float init_speed = 10;
-    float acceleration = 500;
+    float acceleration = 700;
     float max_speed = 800;
     ship->centroid = Vector2Create(GetScreenWidth() / 2.0, GetScreenHeight() / 2.0);
     ship->top = Vector2Add(ship->centroid, Vector2Create(0, -ship_length));
@@ -148,7 +148,7 @@ void Explosion_update(Explosion_T *explosion, float dt) {
     }
 }
 
-void Explosion_draw(const Explosion_T *explosion, Texture2D explosion_texture) {
+void Explosion_draw(const Explosion_T *explosion, Ship_T *ship, Texture2D explosion_texture) {
     if (!explosion || !explosion->active) return;
 
     float frame_width = (float)explosion_texture.width / explosion->total_frames;
@@ -164,11 +164,11 @@ void Explosion_draw(const Explosion_T *explosion, Texture2D explosion_texture) {
     Rectangle dest_rect = {
         explosion->position.x,
         explosion->position.y,
-        frame_width * 1.5f,
-        frame_height * 1.5f
+        ship->radius * 3,
+        ship->radius * 3
     };
 
-    Vector2 origin = { (frame_width * 1.5f) / 2.0f, (frame_height * 1.5f) / 2.0f };
+    Vector2 origin = { (ship->radius * 3) / 2.0f, (ship->radius * 3) / 2.0f };
 
     DrawTexturePro(explosion_texture, source_rect, dest_rect, origin, 0.0f, WHITE);
 }

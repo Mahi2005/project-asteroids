@@ -41,6 +41,11 @@ void Ship_copy(Ship_T*, Ship_T*);
 // Vector2 farthest_vertex_from_right(Ship_T *, int);
 // Vector2 farthest_vertex_from_left(Ship_T *, int);
 void Ship_init_vertex_codes(Ship_T* ship, int screen_w, int screen_h);
+//void ship_init_assets(texture2D)
+
+
+
+
 int Ship_is_partially_crossed(Ship_T* ship);
 int Ship_is_fully_crossed(Ship_T* ship);
 void Ship_init(Ship_T* ship);
@@ -50,6 +55,6 @@ void Ship_destroy(Ship_T *ship, Explosion_T *explosion);
 
 
 void Explosion_update(Explosion_T *explosion, float delta_time);
-void Explosion_draw(const Explosion_T *explosion, Texture2D texture);
+void Explosion_draw(const Explosion_T *explosion, Ship_T *ship, Texture2D texture);
 
 #endif
