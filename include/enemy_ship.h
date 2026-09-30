@@ -15,6 +15,7 @@ typedef struct {
     Vector2 speed;
     float radius;
     bool active;
+    bool depleted;
     float shootTimer;
     float spawnTimer;
     EnemyBullet_T bullets[MAX_ENEMY_BULLETS];

@@ -224,6 +224,7 @@ void Game_draw_menu() {
             current_screen = PLAY;
             menu_init(screenwidth, screenheight, false);
         } else if (choice == BUTTON_PLAY) {
+            init_enemies_for_level(level);
             current_screen = PLAY;
         } else if (choice == BUTTON_SETTINGS) {
             current_screen = SETTINGS;

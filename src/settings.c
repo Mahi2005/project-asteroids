@@ -54,6 +54,6 @@ DifficultyPar_T settings_get_difficulty_parameters(void){
 
 int settings_get_enemy_count(int level){
     DifficultyPar_T p = settings_get_difficulty_parameters();
-    int effective_level = (level < 1) ? 1 : level;
-    return p.enemy_count_level1 + (effective_level - 1) * p.enemy_count_increment;
+    if(level < 0) level = 0;
+    return p.enemy_count_level1 + level * p.enemy_count_increment;
 }
