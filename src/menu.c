@@ -541,6 +541,10 @@ bool draw_credits_screen(int screenwidth, int screenheight){
         "CREDITS",
         "",
         "",
+        "SUPERVISED BY",
+        "JUNAED YOUNUS KHAN",
+        "",
+        "DEVELOPED BY",
         "SABER HOSSAIN ABIR",
         "ROLL : 2505109",
         "Initial ship moving code",
@@ -574,14 +578,21 @@ bool draw_credits_screen(int screenwidth, int screenheight){
     float y = screenheight + credits_scroll_y;
 
     for(int i = 0; i < line_count; i++){
-        bool is_name = (i == 3 || i == 10 || i == 17);
+        bool is_name = (i == 3 || i == 4 ||i == 7 || i == 14 || i == 21);
         Color color;
         if(i == 0) {
-            text_size = 44;
-             color = YELLOW;
+            text_size = 60;
+            color = RED;
+            
         } else if(is_name) {
-            text_size = 26;
-            color = YELLOW;
+           if(i == 3){
+                text_size = 40;
+                color = GREEN;
+            }
+            else {
+                text_size = 26;
+                color = YELLOW;
+            }
         } else {
             text_size = 20;
             color = WHITE;

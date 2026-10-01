@@ -434,7 +434,11 @@ void Game_draw_frame() {
             is_paused = !is_paused;
         }
         // game_background_draw();
-    } else {
+    } else if (is_entering_name) {
+        draw_name_entry(screenwidth, screenheight, total_score,
+                                name_buffer, NAME_MAX_LEN);
+    } 
+    else {
        // if (game_background_loaded) {
        //     UnloadTexture(game_background);
        //     game_background_loaded = false;
